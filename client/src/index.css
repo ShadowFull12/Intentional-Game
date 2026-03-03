@@ -85,44 +85,46 @@ body {
     radial-gradient(circle 200px, transparent 0%, transparent 35%, rgba(0,0,0,0.30) 75%);
   background-size: 300vw 300vh;
   background-repeat: no-repeat;
-  background-position: 82% 50%;
+  background-position: 95% 61%;
   animation: detectiveSearch 12s ease-in-out infinite;
   will-change: background-position;
 }
 
 /*
- * Keyframe positions map spotlight to viewport coordinates:
- *   X%: 25% = right edge, 50% = center, 75% = left edge
- *   Y%: 50% = vertical center, <50% = below center, >50% = above center
- * (Inverted because the oversized background shifts oppositely.)
+ * Keyframe ↔ screen coordinate mapping (bg-size: 300vw 300vh):
+ *   screenX = 150 - 2 × Xp    screenY = 150 - 2 × Yp
  *
- * Motion design: wide, smooth arcs — no micro-jitter. ease-in-out timing
- * between each keyframe naturally decelerates at "look" positions and
- * accelerates during sweeps, producing a searching cadence.
+ * "Intentional" sits at ≈ (50vw, 28vh)  → Xp 50%, Yp 61%
+ * "Reviews"     sits at ≈ (50vw, 39vh)  → Xp 50%, Yp 55.5%
+ * Off-screen left      ≈ (-40vw, 28vh)  → Xp 95%, Yp 61%
+ * Off-screen right     ≈ (140vw, 28vh)  → Xp  5%, Yp 61%
+ *
+ * Smooth arcs only — ease-in-out timing naturally decelerates at
+ * "look" positions and accelerates during sweeps.
  */
 @keyframes detectiveSearch {
-  /* Off-screen left — about to enter */
-  0%   { background-position: 82% 51%; }
-  /* Sweep in from the left across the page */
-  10%  { background-position: 62% 49%; }
-  /* Continue sweeping right */
-  20%  { background-position: 40% 51%; }
-  /* Reach the right side, slow down — "looking" */
-  30%  { background-position: 33% 50%; }
-  /* Sweep back left */
-  40%  { background-position: 58% 49%; }
-  /* Drift further left */
-  48%  { background-position: 67% 51%; }
-  /* Settle near centre — changing intent */
-  55%  { background-position: 52% 50%; }
-  /* Creep downward toward "Reviews" */
-  64%  { background-position: 50% 47%; }
-  /* Lock onto Reviews */
-  72%  { background-position: 50% 45%; }
-  /* Hold on Reviews — the "discovery" moment */
-  90%  { background-position: 50% 45%; }
-  /* Drift off-screen left to restart */
-  100% { background-position: 82% 51%; }
+  /* Off-screen left */
+  0%   { background-position: 95% 61%; }
+  /* Sweep in — reach left edge of "Intentional" */
+  10%  { background-position: 58% 61%; }
+  /* Glide across — centre of "Intentional" */
+  20%  { background-position: 50% 61%; }
+  /* Right edge of "Intentional" — slow, "reading" */
+  30%  { background-position: 41% 61%; }
+  /* Sweep back left across the title */
+  40%  { background-position: 55% 61%; }
+  /* Drift past left edge */
+  48%  { background-position: 63% 61%; }
+  /* Return to centre of "Intentional" */
+  56%  { background-position: 50% 61%; }
+  /* Start creeping downward toward "Reviews" */
+  65%  { background-position: 50% 58%; }
+  /* Lock onto "Reviews" */
+  72%  { background-position: 50% 55.5%; }
+  /* Hold — the "discovery" moment */
+  90%  { background-position: 50% 55.5%; }
+  /* Drift off-screen left to loop */
+  100% { background-position: 95% 61%; }
 }
 
 /* ─── Scrollbar ───────────────────────────────────── */
