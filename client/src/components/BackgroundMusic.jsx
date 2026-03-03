@@ -5,12 +5,12 @@ const DEFAULT_VOLUME = 0.08; // very low background volume
 
 export default function BackgroundMusic() {
   const audioRef = useRef(null);
+  const startedRef = useRef(false);
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     return saved !== null ? parseFloat(saved) : DEFAULT_VOLUME;
   });
-  const [started, setStarted] = useState(false);
   const [showSlider, setShowSlider] = useState(false);
 
   // Sync volume to audio element
@@ -21,30 +21,34 @@ export default function BackgroundMusic() {
     localStorage.setItem(STORAGE_KEY, volume);
   }, [volume, muted]);
 
-  // Auto-play on first user interaction
+  // Auto-play on first user interaction (runs once)
   useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
     const tryPlay = () => {
-      if (audioRef.current && !started) {
-        audioRef.current.volume = volume;
-        audioRef.current.play().then(() => setStarted(true)).catch(() => {});
-      }
+      if (startedRef.current) return;
+      audio.volume = muted ? 0 : volume;
+      audio.play().then(() => {
+        startedRef.current = true;
+        cleanup();
+      }).catch(() => {});
     };
 
-    // Try immediately (browsers may allow if user already interacted)
+    const events = ['click', 'keydown', 'touchstart', 'pointerdown'];
+    const cleanup = () => {
+      events.forEach(e => document.removeEventListener(e, tryPlay, true));
+    };
+
+    // Try immediately (works if browser already has user-gesture grant)
     tryPlay();
 
-    // Also listen for first interaction
-    const events = ['click', 'keydown', 'touchstart'];
-    const handler = () => {
-      tryPlay();
-      events.forEach(e => document.removeEventListener(e, handler));
-    };
-    events.forEach(e => document.addEventListener(e, handler, { once: false }));
+    // Also listen for the very first user interaction
+    events.forEach(e => document.addEventListener(e, tryPlay, { capture: true }));
 
-    return () => {
-      events.forEach(e => document.removeEventListener(e, handler));
-    };
-  }, [started, volume]);
+    return cleanup;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const toggleMute = useCallback(() => setMuted(m => !m), []);
 

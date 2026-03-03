@@ -10,8 +10,15 @@ import { useGameStore } from '../context/GameContext';
 
 export default function Home() {
   const [mode, setMode] = useState(null); // 'create' | 'join'
-  const [name, setName] = useState('');
+  const [name, setName] = useState(() => localStorage.getItem('player-nickname') || '');
   const [roomCode, setRoomCode] = useState('');
+
+  // Persist nickname in localStorage
+  useEffect(() => {
+    if (name.trim()) {
+      localStorage.setItem('player-nickname', name);
+    }
+  }, [name]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -133,7 +140,8 @@ export default function Home() {
         </span>
       </motion.div>
 
-      {/* Main action area */}
+      {/* Main action area — min-h prevents layout shift when form appears */}
+      <div className="min-h-[360px] flex items-start justify-center w-full">
       <AnimatePresence mode="wait">
         {!mode ? (
           // Mode selection
@@ -142,7 +150,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="flex flex-col sm:flex-row gap-4"
+            className="flex flex-col sm:flex-row gap-4 pt-8"
           >
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -258,6 +266,7 @@ export default function Home() {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
 
       {/* Footer info */}
       <motion.div
