@@ -2,7 +2,7 @@
 
 A real-time multiplayer social deduction game where players write fake product reviews and try to spot the player hiding a secret word.
 
-🔗 **Play now:** [https://intentional-game.vercel.app](https://intentional-game.vercel.app)
+🔗 **Play now:** [https://intentional-reviews.vercel.app](https://intentional-reviews.vercel.app)
 
 ---
 
