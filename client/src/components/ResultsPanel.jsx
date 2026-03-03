@@ -45,7 +45,7 @@ export default function ResultsPanel({ results, onConfetti }) {
           The hidden word was <span className="text-accent font-semibold">"{results.hiddenWord}"</span>
         </p>
         <p className="text-white/40 text-xs mt-1">
-          Product: {results.product}
+          Product: {typeof results.product === 'object' ? results.product.name : results.product}
         </p>
       </motion.div>
 

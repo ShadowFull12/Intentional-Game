@@ -17,8 +17,7 @@ import {
 } from 'firebase/database';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '../utils/firebase';
-import { getRandomProduct } from '../utils/productGenerator';
-import { getRandomWord } from '../utils/wordGenerator';
+import { getRandomProduct, getMatchedWord } from '../utils/productGenerator';
 import { playPhaseChange, playSubmit, playVote } from '../utils/sounds';
 
 /* ─── Constants ─────────────────────────────────────── */
@@ -413,7 +412,7 @@ export const useGameStore = create((set, get) => ({
      Internal: Host Game Controller
      ═══════════════════════════════════════════════════════ */
 
-  /** Start a new round — pick product, word, hidden player */
+  /** Start a new round — pick product, matched word, hidden player */
   _hostStartRound: async (roomId) => {
     clearPhaseTimer();
     _transitioning = true;
@@ -421,10 +420,20 @@ export const useGameStore = create((set, get) => ({
     const { players, round } = get();
     const newRound = (round || 0) + 1;
 
-    const product = getRandomProduct(_usedProducts);
-    const word = getRandomWord(_usedWords);
-    _usedProducts.push(product);
+    const productObj = getRandomProduct(_usedProducts);
+    const word = getMatchedWord(productObj, _usedWords);
+    _usedProducts.push(productObj.name);
     _usedWords.push(word);
+
+    // Store the full product object for the info node
+    const productData = {
+      name: productObj.name,
+      category: productObj.category,
+      description: productObj.description,
+      price: productObj.price,
+      rating: productObj.rating,
+      reviews: productObj.reviews,
+    };
 
     const playerIds = players.map((p) => p.id);
     const hiddenId = playerIds[Math.floor(Math.random() * playerIds.length)];
@@ -447,7 +456,7 @@ export const useGameStore = create((set, get) => ({
     // Room info
     updates[`rooms/${roomId}/info/phase`] = PHASES.PRODUCT_REVEAL;
     updates[`rooms/${roomId}/info/round`] = newRound;
-    updates[`rooms/${roomId}/info/product`] = product;
+    updates[`rooms/${roomId}/info/product`] = productData;
     updates[`rooms/${roomId}/info/timerEnd`] = Date.now() + DURATIONS.productReveal;
 
     await dbUpdate(ref(db), updates);
@@ -501,7 +510,7 @@ export const useGameStore = create((set, get) => ({
     }
   },
 
-  /** Collect all submissions, shuffle, and reveal anonymized reviews */
+  /** Collect all submissions, shuffle, and reveal reviews */
   _hostCollectReviews: async (roomId) => {
     if (_transitioning) return;
     clearPhaseTimer();
@@ -517,10 +526,11 @@ export const useGameStore = create((set, get) => ({
       playerName: p.name,
     }));
     const shuffled = shuffleArray(reviewData);
-    const anonReviews = shuffled.map((r) => ({ text: r.text }));
+    // Public reviews include playerName so voters can see who wrote what
+    const publicReviews = shuffled.map((r) => ({ text: r.text, playerName: r.playerName }));
 
     await dbUpdate(ref(db), {
-      [`rooms/${roomId}/reviews`]: anonReviews,
+      [`rooms/${roomId}/reviews`]: publicReviews,
       [`rooms/${roomId}/hostData/fullReviews`]: shuffled,
       [`rooms/${roomId}/info/phase`]: PHASES.REVEAL,
       [`rooms/${roomId}/info/timerEnd`]: Date.now() + DURATIONS.reveal,
@@ -613,7 +623,7 @@ export const useGameStore = create((set, get) => ({
         wasHidden: p.id === hiddenId,
         votedCorrectly: votes[p.id] === hiddenId,
       })),
-      product: get().product,
+      product: typeof get().product === 'object' ? get().product.name : get().product,
     };
 
     await dbUpdate(ref(db), {

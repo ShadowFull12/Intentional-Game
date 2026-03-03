@@ -161,7 +161,7 @@ export default function Game() {
             >
               <div className="text-center mb-4">
                 <p className="text-sm text-white/40">
-                  Product: <span className="text-white/70">{product}</span>
+                  Product: <span className="text-white/70">{typeof product === 'object' ? product.name : product}</span>
                 </p>
               </div>
               {reviews.map((review, i) => (
@@ -183,14 +183,23 @@ export default function Game() {
               exit={{ opacity: 0 }}
               className="w-full max-w-2xl space-y-6"
             >
-              {/* Show reviews for reference */}
+              {/* Show reviews with authors for voting context */}
               <div className="glass rounded-2xl p-4">
                 <h4 className="text-xs text-white/30 uppercase tracking-wider mb-3">Reviews</h4>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                   {reviews.map((review, i) => (
-                    <div key={i} className="p-2 bg-white/5 rounded-xl text-sm text-white/70">
-                      <span className="text-accent text-xs mr-2">#{i + 1}</span>
-                      "{review.text}"
+                    <div key={i} className="p-3 bg-white/5 rounded-xl text-sm">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center text-[10px] font-bold text-accent">
+                          {review.playerName ? review.playerName.charAt(0).toUpperCase() : '#'}
+                        </div>
+                        <span className="text-xs font-medium text-white/60">
+                          {review.playerName || `Review #${i + 1}`}
+                        </span>
+                      </div>
+                      <p className="text-white/80 leading-relaxed pl-8">
+                        "{review.text}"
+                      </p>
                     </div>
                   ))}
                 </div>
