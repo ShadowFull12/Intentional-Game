@@ -421,63 +421,68 @@ export const useGameStore = create((set, get) => ({
     clearPhaseTimer();
     _transitioning = true;
 
-    const { players, round } = get();
-    const newRound = (round || 0) + 1;
+    try {
+      const { players, round } = get();
+      const newRound = (round || 0) + 1;
 
-    // Show loading state while generating product via Gemini
-    await dbUpdate(ref(db, `rooms/${roomId}/info`), { isGeneratingProduct: true });
+      // Show loading state while generating product via Gemini
+      await dbUpdate(ref(db, `rooms/${roomId}/info`), { isGeneratingProduct: true });
 
-    const productObj = await getRandomProduct(_usedProducts);
-    const word = getMatchedWord(productObj, _usedWords);
-    _usedProducts.push(productObj.name);
-    _usedWords.push(word);
+      const productObj = await getRandomProduct(_usedProducts);
+      const word = getMatchedWord(productObj, _usedWords);
+      _usedProducts.push(productObj.name);
+      _usedWords.push(word);
 
-    // Store the full product object for the info node
-    const productData = {
-      name: productObj.name,
-      category: productObj.category,
-      description: productObj.description,
-      price: productObj.price,
-      rating: productObj.rating,
-      reviews: productObj.reviews,
-      imageUrl: productObj.imageUrl || null,
-    };
+      // Store the full product object for the info node (skip imageUrl to keep RTDB small)
+      const productData = {
+        name: productObj.name,
+        category: productObj.category,
+        description: productObj.description,
+        price: productObj.price,
+        rating: productObj.rating,
+        reviews: productObj.reviews,
+      };
 
-    const playerIds = players.map((p) => p.id);
-    const hiddenId = playerIds[Math.floor(Math.random() * playerIds.length)];
+      const playerIds = players.map((p) => p.id);
+      const hiddenId = playerIds[Math.floor(Math.random() * playerIds.length)];
 
-    const updates = {};
-    // Clear old round data
-    updates[`rooms/${roomId}/submissions`] = null;
-    updates[`rooms/${roomId}/reviews`] = null;
-    updates[`rooms/${roomId}/votes`] = null;
-    updates[`rooms/${roomId}/results`] = null;
-    updates[`rooms/${roomId}/secret`] = null;
-    updates[`rooms/${roomId}/hostData`] = { hiddenPlayerId: hiddenId, hiddenWord: word };
+      const updates = {};
+      // Clear old round data
+      updates[`rooms/${roomId}/submissions`] = null;
+      updates[`rooms/${roomId}/reviews`] = null;
+      updates[`rooms/${roomId}/votes`] = null;
+      updates[`rooms/${roomId}/results`] = null;
+      updates[`rooms/${roomId}/secret`] = null;
+      updates[`rooms/${roomId}/hostData`] = { hiddenPlayerId: hiddenId, hiddenWord: word };
 
-    // Reset player states
-    playerIds.forEach((pid) => {
-      updates[`rooms/${roomId}/players/${pid}/hasSubmittedReview`] = false;
-      updates[`rooms/${roomId}/players/${pid}/hasVoted`] = false;
-    });
+      // Reset player states
+      playerIds.forEach((pid) => {
+        updates[`rooms/${roomId}/players/${pid}/hasSubmittedReview`] = false;
+        updates[`rooms/${roomId}/players/${pid}/hasVoted`] = false;
+      });
 
-    // Room info
-    updates[`rooms/${roomId}/info/phase`] = PHASES.PRODUCT_REVEAL;
-    updates[`rooms/${roomId}/info/round`] = newRound;
-    updates[`rooms/${roomId}/info/product`] = productData;
-    updates[`rooms/${roomId}/info/timerEnd`] = Date.now() + DURATIONS.productReveal;
-    updates[`rooms/${roomId}/info/isGeneratingProduct`] = false;
+      // Room info
+      updates[`rooms/${roomId}/info/phase`] = PHASES.PRODUCT_REVEAL;
+      updates[`rooms/${roomId}/info/round`] = newRound;
+      updates[`rooms/${roomId}/info/product`] = productData;
+      updates[`rooms/${roomId}/info/timerEnd`] = Date.now() + DURATIONS.productReveal;
+      updates[`rooms/${roomId}/info/isGeneratingProduct`] = false;
 
-    await dbUpdate(ref(db), updates);
+      await dbUpdate(ref(db), updates);
 
-    // Write secret after clearing (separate call to avoid ancestor path conflict)
-    await dbSet(ref(db, `rooms/${roomId}/secret/${hiddenId}`), { hiddenWord: word, isHidden: true });
+      // Write secret after clearing (separate call to avoid ancestor path conflict)
+      await dbSet(ref(db, `rooms/${roomId}/secret/${hiddenId}`), { hiddenWord: word, isHidden: true });
 
-    _transitioning = false;
-
-    _phaseTimer = setTimeout(() => {
-      get()._hostSetPhase(roomId, PHASES.WRITING, DURATIONS.writing);
-    }, DURATIONS.productReveal);
+      _phaseTimer = setTimeout(() => {
+        get()._hostSetPhase(roomId, PHASES.WRITING, DURATIONS.writing);
+      }, DURATIONS.productReveal);
+    } catch (err) {
+      console.error('[Host] _hostStartRound failed:', err);
+      // Clear loading state so game is not stuck
+      try { await dbUpdate(ref(db, `rooms/${roomId}/info`), { isGeneratingProduct: false }); } catch (e) { /* best effort */ }
+    } finally {
+      _transitioning = false;
+    }
   },
 
   /** Transition to a specific phase with timer */
@@ -486,11 +491,16 @@ export const useGameStore = create((set, get) => ({
     clearPhaseTimer();
     _transitioning = true;
 
-    await dbUpdate(ref(db, `rooms/${roomId}/info`), {
-      phase,
-      timerEnd: Date.now() + duration,
-    });
-    _transitioning = false;
+    try {
+      await dbUpdate(ref(db, `rooms/${roomId}/info`), {
+        phase,
+        timerEnd: Date.now() + duration,
+      });
+    } catch (err) {
+      console.error('[Host] _hostSetPhase failed:', err);
+    } finally {
+      _transitioning = false;
+    }
 
     // Schedule auto-advance
     if (phase === PHASES.WRITING) {
@@ -527,31 +537,35 @@ export const useGameStore = create((set, get) => ({
     clearPhaseTimer();
     _transitioning = true;
 
-    const { players } = get();
-    const subSnap = await dbGet(ref(db, `rooms/${roomId}/submissions`));
-    const submissions = subSnap.val() || {};
+    try {
+      const { players } = get();
+      const subSnap = await dbGet(ref(db, `rooms/${roomId}/submissions`));
+      const submissions = subSnap.val() || {};
 
-    const reviewData = players.map((p) => ({
-      text: submissions[p.id]?.text || '(No review submitted)',
-      playerId: p.id,
-      playerName: p.name,
-    }));
-    const shuffled = shuffleArray(reviewData);
-    // Public reviews include playerName so voters can see who wrote what
-    const publicReviews = shuffled.map((r) => ({ text: r.text, playerName: r.playerName }));
+      const reviewData = players.map((p) => ({
+        text: submissions[p.id]?.text || '(No review submitted)',
+        playerId: p.id,
+        playerName: p.name,
+      }));
+      const shuffled = shuffleArray(reviewData);
+      // Public reviews include playerName so voters can see who wrote what
+      const publicReviews = shuffled.map((r) => ({ text: r.text, playerName: r.playerName }));
 
-    await dbUpdate(ref(db), {
-      [`rooms/${roomId}/reviews`]: publicReviews,
-      [`rooms/${roomId}/hostData/fullReviews`]: shuffled,
-      [`rooms/${roomId}/info/phase`]: PHASES.REVEAL,
-      [`rooms/${roomId}/info/timerEnd`]: Date.now() + DURATIONS.reveal,
-    });
+      await dbUpdate(ref(db), {
+        [`rooms/${roomId}/reviews`]: publicReviews,
+        [`rooms/${roomId}/hostData/fullReviews`]: shuffled,
+        [`rooms/${roomId}/info/phase`]: PHASES.REVEAL,
+        [`rooms/${roomId}/info/timerEnd`]: Date.now() + DURATIONS.reveal,
+      });
 
-    _transitioning = false;
-
-    _phaseTimer = setTimeout(() => {
-      get()._hostSetPhase(roomId, PHASES.VOTING, DURATIONS.voting);
-    }, DURATIONS.reveal);
+      _phaseTimer = setTimeout(() => {
+        get()._hostSetPhase(roomId, PHASES.VOTING, DURATIONS.voting);
+      }, DURATIONS.reveal);
+    } catch (err) {
+      console.error('[Host] _hostCollectReviews failed:', err);
+    } finally {
+      _transitioning = false;
+    }
   },
 
   /** Tally votes, compute scores, publish results */
@@ -560,9 +574,10 @@ export const useGameStore = create((set, get) => ({
     clearPhaseTimer();
     _transitioning = true;
 
-    // Read fresh player data from RTDB
-    const playersSnap = await dbGet(ref(db, `rooms/${roomId}/players`));
-    const playersData = playersSnap.val() || {};
+    try {
+      // Read fresh player data from RTDB
+      const playersSnap = await dbGet(ref(db, `rooms/${roomId}/players`));
+      const playersData = playersSnap.val() || {};
     const players = Object.entries(playersData).map(([id, p]) => ({
       id, name: p.name, score: p.score || 0,
     }));
@@ -644,8 +659,6 @@ export const useGameStore = create((set, get) => ({
       [`rooms/${roomId}/info/timerEnd`]: Date.now() + DURATIONS.results,
     });
 
-    _transitioning = false;
-
     _phaseTimer = setTimeout(async () => {
       const snap = await dbGet(ref(db, `rooms/${roomId}/info`));
       const info = snap.val();
@@ -657,6 +670,11 @@ export const useGameStore = create((set, get) => ({
         get()._hostSetPhase(roomId, PHASES.NEXT_ROUND, DURATIONS.nextRound);
       }
     }, DURATIONS.results);
+    } catch (err) {
+      console.error('[Host] _hostCalculateResults failed:', err);
+    } finally {
+      _transitioning = false;
+    }
   },
 }));
 

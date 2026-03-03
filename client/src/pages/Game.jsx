@@ -54,12 +54,12 @@ export default function Game() {
     }
   }, [roomId, navigate]);
 
-  // Return to lobby on waiting phase
+  // Return to lobby on waiting phase (but not while generating a product)
   useEffect(() => {
-    if (phase === 'waiting' && round === 0) {
+    if (phase === 'waiting' && round === 0 && !isGeneratingProduct) {
       navigate('/lobby');
     }
-  }, [phase, round, navigate]);
+  }, [phase, round, isGeneratingProduct, navigate]);
 
   const triggerConfetti = useCallback(() => {
     confetti({

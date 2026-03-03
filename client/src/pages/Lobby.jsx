@@ -17,6 +17,7 @@ export default function Lobby() {
   const playerId = useGameStore((s) => s.playerId);
   const players = useGameStore((s) => s.players);
   const phase = useGameStore((s) => s.phase);
+  const isGeneratingProduct = useGameStore((s) => s.isGeneratingProduct);
   const startGame = useGameStore((s) => s.startGame);
   const error = useGameStore((s) => s.error);
   const clearError = useGameStore((s) => s.clearError);
@@ -31,12 +32,12 @@ export default function Lobby() {
     }
   }, [roomId, navigate]);
 
-  // Navigate to game when phase changes
+  // Navigate to game when phase changes or product generation starts
   useEffect(() => {
-    if (phase && phase !== 'waiting') {
+    if ((phase && phase !== 'waiting') || isGeneratingProduct) {
       navigate('/game');
     }
-  }, [phase, navigate]);
+  }, [phase, isGeneratingProduct, navigate]);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(roomId);

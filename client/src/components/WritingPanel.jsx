@@ -61,7 +61,7 @@ export default function WritingPanel() {
       className="glass-card max-w-md mx-auto"
     >
       <label className="block text-sm text-white/40 mb-2 font-medium">
-        Write your review for <span className="text-accent">{product}</span>
+        Write your review for <span className="text-accent">{typeof product === 'object' ? product?.name : product}</span>
       </label>
 
       <textarea

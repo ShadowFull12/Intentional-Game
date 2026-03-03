@@ -33,6 +33,9 @@ function StarRating({ rating }) {
 }
 
 export default function ProductCard({ product, hiddenWord, isHidden }) {
+  // Guard against null/undefined product
+  if (!product) return null;
+
   // product can be a string (legacy) or an object with full metadata
   const name = typeof product === 'object' ? product.name : product;
   const description = typeof product === 'object' ? product.description : null;
