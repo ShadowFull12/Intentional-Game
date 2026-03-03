@@ -1,456 +1,493 @@
 /**
- * Intentional - Product Catalog (categorized with descriptions + matched words)
- * Each product has a category, a description, a price, a rating, and a pool
- * of hidden words that "make sense" for that type of product.
+ * Intentional - Product Generator
+ *
+ * Uses Gemini AI to dynamically generate realistic products.
+ * Falls back to a curated static catalog if Gemini is unavailable.
+ * Supports pre-generation to minimize player wait time.
  */
 
-const CATALOG = [
-  // ─── Kitchen & Food ─────────────────────────────────
-  {
-    name: "Warp Speed Blender", category: "Kitchen",
-    description: "Blend your smoothies in under 3 seconds with patented vortex technology. 12-speed motor, BPA-free pitcher, and whisper-quiet operation.",
-    price: "$79.99", rating: 4.3, reviews: 1247,
-    words: ["banana", "mango", "strawberry", "smoothie", "blueberry", "spinach", "protein", "vanilla", "almond", "yogurt"],
-  },
-  {
-    name: "Temperature Changing Spoon", category: "Kitchen",
-    description: "This smart spoon changes color when your food is too hot. Perfect for parents feeding little ones or impatient soup lovers. Dishwasher safe.",
-    price: "$14.99", rating: 4.1, reviews: 832,
-    words: ["cereal", "soup", "oatmeal", "honey", "cinnamon", "sugar", "cream", "butter", "silver", "stainless"],
-  },
-  {
-    name: "Self-Stirring Mug", category: "Kitchen",
-    description: "Tired of stirring? This battery-operated mug keeps your coffee, hot chocolate, or matcha perfectly mixed. Stainless steel interior with heat-resistant handle.",
-    price: "$24.99", rating: 3.9, reviews: 2103,
-    words: ["coffee", "chocolate", "morning", "caramel", "frothy", "steam", "ceramic", "latte", "mocha", "espresso"],
-  },
-  {
-    name: "Thermal Chopsticks", category: "Kitchen",
-    description: "Heat-sensing chopsticks that glow when food is above 65°C. Made from food-grade titanium with silicone grip tips. Great for hot pot nights.",
-    price: "$19.99", rating: 4.5, reviews: 567,
-    words: ["noodle", "sushi", "bamboo", "ginger", "wasabi", "sesame", "teriyaki", "dumpling", "tofu", "broth"],
-  },
-  {
-    name: "Transparent Toaster", category: "Kitchen",
-    description: "Watch your bread turn golden through the see-through glass panels. Even toasting technology with 6 browning settings. Crumb tray included.",
-    price: "$49.99", rating: 4.2, reviews: 1891,
-    words: ["bread", "butter", "crispy", "golden", "breakfast", "wheat", "bagel", "crunchy", "toast", "jam"],
-  },
-  {
-    name: "Sonic Ice Cream Scoop", category: "Kitchen",
-    description: "Ultrasonic vibrations melt through even the hardest frozen ice cream. Ergonomic handle, no batteries required — powered by your grip pressure.",
-    price: "$29.99", rating: 4.7, reviews: 443,
-    words: ["vanilla", "chocolate", "cherry", "sprinkle", "waffle", "sundae", "caramel", "fudge", "scoop", "frozen"],
-  },
-  {
-    name: "Mood Lighting Fork", category: "Kitchen",
-    description: "LED-embedded fork that changes color based on the food's temperature. Party mode included. USB-C rechargeable. Food-safe silicone coating.",
-    price: "$17.99", rating: 3.6, reviews: 289,
-    words: ["pasta", "salad", "rainbow", "dinner", "candle", "glow", "sparkle", "neon", "prong", "steak"],
-  },
-  {
-    name: "Antigravity Popcorn Maker", category: "Kitchen",
-    description: "Hot air pops kernels upward into any bowl placed on top. No oil needed. Makes 12 cups in under 2 minutes. Perfect movie night companion.",
-    price: "$39.99", rating: 4.4, reviews: 1456,
-    words: ["butter", "kernel", "movie", "salt", "caramel", "cheese", "kettle", "snack", "crunchy", "theater"],
-  },
-  {
-    name: "Caldera Hot Plate", category: "Kitchen",
-    description: "Volcanic-inspired design with rapid induction heating. Reaches 400°F in 30 seconds. Built-in timer, auto shutoff, and lava-flow LED indicator ring.",
-    price: "$59.99", rating: 4.6, reviews: 710,
-    words: ["pepper", "garlic", "sizzle", "flame", "copper", "skillet", "griddle", "sear", "simmer", "smoke"],
-  },
-  {
-    name: "Plateau Cutting Board", category: "Kitchen",
-    description: "Multi-level bamboo cutting board with built-in juice grooves and collapsible food catch bins. Reversible surface — butcher block on one side, carving grooves on the other.",
-    price: "$34.99", rating: 4.8, reviews: 2340,
-    words: ["tomato", "onion", "knife", "parsley", "garlic", "lemon", "cilantro", "slice", "chop", "basil"],
-  },
+import { generateFullProduct } from './geminiService';
 
-  // ─── Tech & Gadgets ─────────────────────────────────
-  {
-    name: "Telepathic Earbuds", category: "Tech",
-    description: "AI noise-cancellation learns your preferences over time. Translates 40 languages in real-time. 8-hour battery with wireless charging case.",
-    price: "$199.99", rating: 4.4, reviews: 5621,
-    words: ["volume", "bass", "podcast", "rhythm", "silence", "melody", "wireless", "treble", "echo", "stereo"],
-  },
-  {
-    name: "AI Toothbrush", category: "Tech",
-    description: "Tracks brushing coverage with sensors that map your teeth. App-connected with daily reports. Pressure sensor prevents gum damage. 90-day battery.",
-    price: "$89.99", rating: 4.0, reviews: 3214,
-    words: ["sparkle", "minty", "bristle", "enamel", "whitening", "fluoride", "rinse", "plaque", "polish", "fresh"],
-  },
-  {
-    name: "Holographic Notebook", category: "Tech",
-    description: "Write on the e-ink surface with the included stylus — pages sync to cloud instantly. Holographic cover projects your notes in 3D. 200-page capacity.",
-    price: "$129.99", rating: 4.2, reviews: 1876,
-    words: ["pencil", "doodle", "margin", "sketch", "eraser", "scribble", "diagram", "pixel", "cursor", "draft"],
-  },
-  {
-    name: "Crystal USB Drive", category: "Tech",
-    description: "64GB storage encased in genuine quartz crystal. LED illuminated data indicator. Shockproof, waterproof, and looks stunning on any keychain.",
-    price: "$29.99", rating: 4.3, reviews: 921,
-    words: ["diamond", "sparkle", "prism", "quartz", "facet", "pendant", "gem", "glimmer", "shard", "geode"],
-  },
-  {
-    name: "Retro Pixel Watch", category: "Tech",
-    description: "8-bit pixel display meets modern smart watch. Steps, heart rate, notifications. Customizable pixel art watch faces. 5-day battery life.",
-    price: "$149.99", rating: 4.6, reviews: 4532,
-    words: ["arcade", "pixel", "joystick", "vintage", "sprite", "retro", "bezel", "buckle", "wrist", "strap"],
-  },
-  {
-    name: "Quantum Eraser", category: "Tech",
-    description: "Say goodbye to white-out. This electronic eraser uses targeted UV pulse to remove ink from paper without damaging the surface. Rechargeable.",
-    price: "$44.99", rating: 3.8, reviews: 672,
-    words: ["pencil", "mistake", "smudge", "graphite", "carbon", "streak", "rubber", "residue", "particle", "fragment"],
-  },
-  {
-    name: "Plasma Globe Watch", category: "Tech",
-    description: "Miniature plasma display on your wrist. Touch-reactive lightning arcs. Also tells time. Conversation starter guaranteed at every party.",
-    price: "$69.99", rating: 4.1, reviews: 1345,
-    words: ["lightning", "voltage", "spark", "current", "pulse", "static", "electron", "flicker", "coil", "glow"],
-  },
-  {
-    name: "Dream Recorder Headband", category: "Tech",
-    description: "EEG sensors capture your dream patterns. AI reconstructs dream summaries. Sleep coaching included. Comfortable fabric band with 10-hour battery.",
-    price: "$249.99", rating: 3.7, reviews: 891,
-    words: ["pillow", "moonlight", "whisper", "cloud", "slumber", "twilight", "blanket", "snore", "lullaby", "drift"],
-  },
-  {
-    name: "Invisible Ink Printer", category: "Tech",
-    description: "Print secret messages only visible under UV light. Works with standard A4 paper. Includes UV flashlight pen. Perfect for escape rooms and surprises.",
-    price: "$119.99", rating: 4.0, reviews: 543,
-    words: ["cipher", "envelope", "stamp", "riddle", "clue", "mystery", "codebook", "journal", "invisible", "decrypt"],
-  },
-  {
-    name: "Infinity Cube Charger", category: "Tech",
-    description: "Wireless charging cube that also works as a fidget toy. Qi-compatible, charges through cases up to 5mm thick. Satisfying magnetic hinges.",
-    price: "$34.99", rating: 4.5, reviews: 2876,
-    words: ["battery", "cable", "magnet", "socket", "adapter", "voltage", "watt", "circuit", "copper", "lithium"],
-  },
+/* ═══════════════════════════════════════════════════════
+   FALLBACK STATIC CATALOG (used when Gemini is down)
+   50 realistic Amazon-style products
+   ═══════════════════════════════════════════════════════ */
 
-  // ─── Outdoor & Sports ───────────────────────────────
+const FALLBACK_CATALOG = [
   {
-    name: "Gravity Shoes", category: "Outdoor",
-    description: "Spring-loaded soles with adjustable bounce. Feel like walking on the moon. Three modes: walk, jog, bounce. Reflective accents for night runs.",
-    price: "$159.99", rating: 4.3, reviews: 3421,
-    words: ["lace", "trail", "gravel", "sprint", "rubber", "stride", "ankle", "tread", "cushion", "jogger"],
+    name: "ThermoGrip Stainless Steel Travel Mug",
+    category: "Kitchen",
+    description: "Double-wall vacuum insulated 20oz travel mug that keeps drinks hot for 8 hours or cold for 12. Leak-proof lid with one-hand operation and non-slip silicone base.",
+    price: "$24.99", rating: 4.6, reviews: 8742,
+    words: ["coffee", "morning", "steam", "ceramic", "espresso", "latte", "cream", "sugar", "brew", "roast", "filter", "thermos", "sip", "handle", "stainless"],
   },
   {
-    name: "Hover Skateboard", category: "Outdoor",
-    description: "Magnetic levitation deck glides 2 inches above any metal surface. 15 mph top speed, regenerative braking. Carrying handle doubles as kickstand.",
-    price: "$499.99", rating: 4.7, reviews: 876,
-    words: ["ramp", "concrete", "grind", "helmet", "kickflip", "sidewalk", "wheel", "deck", "rail", "pavement"],
+    name: "PawPerfect Self-Cleaning Slicker Brush",
+    category: "Pets",
+    description: "Gently removes loose fur, tangles, and knots with retractable bristles that clean with one click. Ergonomic grip designed for daily grooming of all coat types.",
+    price: "$16.99", rating: 4.4, reviews: 5231,
+    words: ["puppy", "kitten", "fur", "grooming", "collar", "leash", "treat", "belly", "paw", "tail", "shedding", "brush", "gentle", "soft", "coat"],
   },
   {
-    name: "Collapsible Kayak", category: "Outdoor",
-    description: "Full-size kayak that folds into a backpack. Fits in your trunk. Origami-inspired design with rigid hull. Paddle included. 250 lb capacity.",
-    price: "$349.99", rating: 4.5, reviews: 1234,
-    words: ["paddle", "river", "current", "rapids", "splash", "upstream", "sandbar", "creek", "canoe", "wetsuit"],
+    name: "LumiGlow Sunset Table Lamp",
+    category: "Home",
+    description: "Ambient LED lamp that simulates golden hour sunset with 16 warm color modes. Touch-controlled brightness with USB-C charging. Perfect nightstand or desk companion.",
+    price: "$34.99", rating: 4.5, reviews: 3187,
+    words: ["shadow", "glow", "candle", "bulb", "lantern", "curtain", "dimmer", "cozy", "evening", "warm", "amber", "flicker", "bedside", "mood", "light"],
   },
   {
-    name: "Apex Trail Boots", category: "Outdoor",
-    description: "Carbon-fiber reinforced hiking boots with self-lacing mechanism. Gore-Tex waterproof lining, Vibram sole, and built-in ankle support system.",
-    price: "$189.99", rating: 4.8, reviews: 5432,
-    words: ["summit", "boulder", "canyon", "ridge", "glacier", "cliff", "pebble", "granite", "valley", "moss"],
+    name: "QuickSlice Mandoline Slicer Set",
+    category: "Kitchen",
+    description: "Professional-grade vegetable slicer with 5 interchangeable blades and safety hand guard. BPA-free, dishwasher safe. Julienne, waffle cut, and thin slice options included.",
+    price: "$29.99", rating: 4.3, reviews: 6120,
+    words: ["tomato", "onion", "cucumber", "carrot", "pepper", "salad", "knife", "cutting", "kitchen", "recipe", "dinner", "crispy", "fresh", "vegetable", "chop"],
   },
   {
-    name: "Tidal Wave Surfboard", category: "Outdoor",
-    description: "GPS-enabled smart surfboard that tracks your waves, speed, and hang time. Lightweight carbon-foam core with bioluminescent edge strips for dawn patrol.",
-    price: "$399.99", rating: 4.6, reviews: 654,
-    words: ["coral", "salt", "riptide", "dolphin", "seagull", "driftwood", "sandcastle", "breeze", "jellyfish", "shore"],
+    name: "ZenCloud Memory Foam Pillow",
+    category: "Wellness",
+    description: "Contoured cervical support pillow with cooling gel layer and breathable bamboo cover. Adjustable loft with removable filling. Machine washable cover included.",
+    price: "$39.99", rating: 4.4, reviews: 11234,
+    words: ["sleep", "pillow", "blanket", "mattress", "dream", "cozy", "cotton", "linen", "rest", "calm", "feather", "snooze", "comfort", "soft", "cloud"],
   },
   {
-    name: "GPS Dog Collar", category: "Outdoor",
-    description: "Real-time GPS tracking with 500-foot range alerts. Activity monitoring, waterproof, and glows at night. App shows walking routes and play stats.",
-    price: "$49.99", rating: 4.4, reviews: 7654,
-    words: ["leash", "squirrel", "bark", "fetch", "kennel", "puppy", "paw", "treat", "whistle", "collar"],
+    name: "TrailBlazer 40L Hiking Backpack",
+    category: "Outdoor",
+    description: "Lightweight yet durable ripstop nylon daypack with integrated rain cover, hydration sleeve, and ventilated mesh back panel. Multiple compartments for organized packing.",
+    price: "$54.99", rating: 4.5, reviews: 4567,
+    words: ["trail", "summit", "compass", "campfire", "mountain", "valley", "creek", "pine", "boulder", "ridge", "tent", "hiking", "altitude", "wilderness", "forest"],
   },
   {
-    name: "Magnetic Fishing Rod", category: "Outdoor",
-    description: "Telescoping rod with rare-earth magnet tip for treasure hunting in lakes and rivers. Also works as a regular fishing rod. Carbon fiber construction.",
-    price: "$79.99", rating: 4.2, reviews: 987,
-    words: ["trout", "worm", "bobber", "tackle", "sinker", "catfish", "bait", "hook", "reel", "minnow"],
+    name: "ProType Wireless Mechanical Keyboard",
+    category: "Tech",
+    description: "Hot-swappable mechanical switches with Bluetooth 5.0 and USB-C connectivity. RGB backlight, 75% compact layout, and 4000mAh battery lasting up to 200 hours.",
+    price: "$69.99", rating: 4.6, reviews: 7823,
+    words: ["typing", "keyboard", "mouse", "screen", "desktop", "laptop", "cursor", "click", "scroll", "cable", "battery", "wireless", "switch", "button", "digital"],
   },
   {
-    name: "Monsoon Raincoat", category: "Outdoor",
-    description: "Triple-layer waterproof with sealed seams. Packs into its own pocket. Reflective trim, pit zips for ventilation, and a built-in rain gauge on the sleeve.",
-    price: "$89.99", rating: 4.5, reviews: 3210,
-    words: ["puddle", "drizzle", "thunder", "umbrella", "foggy", "overcast", "rainbow", "hail", "gust", "drench"],
+    name: "FreshSeal Vacuum Food Container Set",
+    category: "Kitchen",
+    description: "5-piece airtight container set with one-touch vacuum pump lid. Crystal-clear BPA-free plastic, microwave and dishwasher safe. Stackable design saves counter space.",
+    price: "$32.99", rating: 4.2, reviews: 3456,
+    words: ["lunch", "leftovers", "fridge", "pantry", "fresh", "storage", "seal", "container", "snack", "meal", "prep", "stack", "pour", "freeze", "thaw"],
   },
   {
-    name: "Summit Sleeping Bag", category: "Outdoor",
-    description: "Rated to -20°F with synthetic down fill. Mummy style with draft collar and hood. Compression sack included. 2.8 lbs — ultralight for alpine adventures.",
-    price: "$219.99", rating: 4.7, reviews: 2109,
-    words: ["campfire", "marshmallow", "starlight", "ember", "lantern", "firewood", "raccoon", "pinecone", "tent", "cocoon"],
+    name: "GlideRite Ceramic Hair Straightener",
+    category: "Fashion",
+    description: "Tourmaline ceramic plates heat to 450°F in 30 seconds with adjustable temperature dial. Anti-frizz ionic technology, dual voltage for travel, and 360° swivel cord.",
+    price: "$44.99", rating: 4.3, reviews: 9876,
+    words: ["hair", "curl", "braid", "comb", "strand", "mirror", "brush", "style", "sleek", "smooth", "shine", "salon", "heat", "clip", "volume"],
   },
   {
-    name: "Velocity Sneakers", category: "Outdoor",
-    description: "Lightweight running shoes with reactive foam midsole. Knit upper adapts to your foot shape. Reflective heel strip. Available in 12 colors.",
-    price: "$129.99", rating: 4.4, reviews: 8765,
-    words: ["marathon", "pavement", "blister", "finish", "muscle", "sweat", "sprint", "tempo", "hurdle", "podium"],
-  },
-
-  // ─── Home & Decor ──────────────────────────────────
-  {
-    name: "Levitating Lamp", category: "Home",
-    description: "Magnetic levitation base suspends a glowing orb in mid-air. Touch-dimming, warm to cool color temperature. Conversation piece for any living room.",
-    price: "$89.99", rating: 4.6, reviews: 4321,
-    words: ["shadow", "curtain", "lampshade", "flicker", "bulb", "dimmer", "filament", "candle", "glow", "lantern"],
+    name: "AquaPure Filtered Shower Head",
+    category: "Bathroom",
+    description: "15-stage filtration system removes chlorine, heavy metals, and impurities. 3 spray modes with water-saving design that reduces usage by 30% without losing pressure.",
+    price: "$27.99", rating: 4.4, reviews: 5678,
+    words: ["shower", "steam", "towel", "lather", "rinse", "splash", "faucet", "drain", "tile", "marble", "chrome", "spray", "filter", "clean", "refresh"],
   },
   {
-    name: "Acoustic Wallpaper", category: "Home",
-    description: "Sound-absorbing wallpaper in designer patterns. Reduces echo by 60%. Peel and stick application. Perfect for home studios, offices, and nurseries.",
-    price: "$39.99/roll", rating: 4.3, reviews: 1567,
-    words: ["plaster", "brick", "texture", "stripe", "border", "ceiling", "molding", "stencil", "panel", "fabric"],
+    name: "NestNote Leather-Bound Journal",
+    category: "Office",
+    description: "Premium A5 hardcover journal with 200 pages of 120gsm cream paper. Lay-flat binding, ribbon bookmark, and inner pocket. Refillable with replacement inserts.",
+    price: "$19.99", rating: 4.7, reviews: 4321,
+    words: ["pen", "ink", "paper", "notebook", "writing", "margin", "page", "draft", "bookmark", "spine", "chapter", "diary", "memo", "letter", "script"],
   },
   {
-    name: "Aurora Light Strip", category: "Home",
-    description: "Addressable RGBIC LED strip that projects aurora borealis patterns on your wall. Music sync mode, app-controlled, and works with voice assistants.",
-    price: "$44.99", rating: 4.5, reviews: 6543,
-    words: ["prism", "violet", "sunset", "spectrum", "neon", "gradient", "shimmer", "twilight", "galaxy", "indigo"],
+    name: "SoloPod Bluetooth Earbuds Pro",
+    category: "Tech",
+    description: "Active noise cancellation with transparency mode, 32-hour total battery life with charging case. IPX5 sweat resistant, touch controls, and hi-res audio codec support.",
+    price: "$49.99", rating: 4.5, reviews: 12543,
+    words: ["music", "bass", "volume", "melody", "rhythm", "podcast", "wireless", "treble", "echo", "stereo", "beat", "sound", "listen", "audio", "noise"],
   },
   {
-    name: "Singing Alarm Pillow", category: "Home",
-    description: "Memory foam pillow with embedded flat speakers. Plays nature sounds or music as your alarm, getting louder until you wake. Machine washable cover.",
-    price: "$54.99", rating: 4.1, reviews: 2345,
-    words: ["feather", "cotton", "snooze", "mattress", "duvet", "linen", "cushion", "velvet", "flannel", "silk"],
+    name: "GreenThumb Self-Watering Herb Planter",
+    category: "Garden",
+    description: "Indoor herb garden kit with built-in water reservoir that keeps plants hydrated for up to 2 weeks. Includes basil, cilantro, and parsley seed pods. LED grow light included.",
+    price: "$36.99", rating: 4.3, reviews: 2876,
+    words: ["basil", "mint", "seed", "root", "leaf", "stem", "bloom", "soil", "garden", "planter", "water", "green", "herb", "sprout", "harvest"],
   },
   {
-    name: "Floating Bookshelf", category: "Home",
-    description: "Invisible wall-mounted shelf makes your books look like they're floating. Holds up to 15 lbs. Easy 2-screw installation. Powder-coated steel.",
-    price: "$24.99", rating: 4.7, reviews: 8765,
-    words: ["chapter", "bookmark", "spine", "novel", "author", "fable", "library", "paperback", "fiction", "atlas"],
+    name: "RoadMaster Dashboard Phone Mount",
+    category: "Automotive",
+    description: "Universal 360° rotating phone holder with strong suction cup base and adjustable arm. Fits all phones 4.7-7 inches. One-touch release button and cable-friendly design.",
+    price: "$15.99", rating: 4.2, reviews: 8765,
+    words: ["dashboard", "steering", "mirror", "windshield", "parking", "brake", "highway", "cruise", "bumper", "garage", "engine", "tire", "fuel", "seatbelt", "drive"],
   },
   {
-    name: "Geometric Terrarium", category: "Home",
-    description: "Pentagon-shaped glass terrarium for succulents and air plants. Brass-finished metal frame. Opens from the top for watering. Looks like a gemstone.",
-    price: "$32.99", rating: 4.4, reviews: 1987,
-    words: ["moss", "fern", "cactus", "pebble", "orchid", "sprout", "dew", "blossom", "petal", "vine"],
+    name: "CozyKnit Chunky Throw Blanket",
+    category: "Home",
+    description: "Handwoven chenille throw in a gorgeous chunky knit pattern. 50x60 inches, machine washable, and incredibly soft. Available in 12 color options to match any decor.",
+    price: "$42.99", rating: 4.6, reviews: 6789,
+    words: ["blanket", "cozy", "sofa", "cushion", "velvet", "flannel", "fleece", "warm", "winter", "pillow", "knit", "stitch", "fabric", "cotton", "wool"],
   },
   {
-    name: "Nebula Projector Jar", category: "Home",
-    description: "Mason jar-shaped projector casts swirling nebula clouds on any surface. 8 color modes, auto-rotate, and sleep timer. USB-C powered.",
-    price: "$27.99", rating: 4.3, reviews: 3456,
-    words: ["comet", "constellation", "orbit", "meteor", "stardust", "cosmic", "lunar", "asteroid", "horizon", "eclipse"],
+    name: "FlexFit Resistance Band Set",
+    category: "Sports",
+    description: "5 color-coded latex resistance bands from light to extra heavy. Includes door anchor, ankle straps, and carry bag. Perfect for home workouts, physical therapy, and stretching.",
+    price: "$22.99", rating: 4.4, reviews: 15234,
+    words: ["stretch", "muscle", "workout", "exercise", "fitness", "strength", "flex", "band", "gym", "squat", "lunge", "plank", "sweat", "rep", "tone"],
   },
   {
-    name: "Origami Lampshade", category: "Home",
-    description: "Flat-packed shade that folds into a stunning geometric sculpture. Tyvek material — looks like paper, lasts like plastic. 5 shapes included.",
-    price: "$19.99", rating: 4.2, reviews: 1234,
-    words: ["crane", "paper", "crease", "triangle", "fold", "polygon", "bamboo", "pattern", "symmetry", "tessellate"],
+    name: "Artistry Premium Watercolor Set",
+    category: "Art",
+    description: "36 vibrant pan watercolors in a portable tin case with built-in mixing palette. Professional-grade pigments, lightfast and blendable. Includes 2 travel brushes.",
+    price: "$28.99", rating: 4.5, reviews: 3456,
+    words: ["brush", "canvas", "pigment", "palette", "stroke", "blend", "wash", "shade", "tint", "color", "sketch", "paint", "easel", "watercolor", "portrait"],
   },
   {
-    name: "Kinetic Wind Chime", category: "Home",
-    description: "Stainless steel arms spin in the breeze creating mesmerizing patterns. No sound — pure visual zen. Powder-coated for all-weather outdoor use.",
-    price: "$49.99", rating: 4.6, reviews: 2109,
-    words: ["breeze", "willow", "porch", "garden", "copper", "rustle", "patio", "swing", "dangle", "chime"],
+    name: "TinyTunes Musical Baby Mobile",
+    category: "Baby",
+    description: "Rotating crib mobile with 12 soothing melodies and a nightlight projector. Soft plush animals detach for independent play. Timer with 15/30/60 minute auto-off.",
+    price: "$31.99", rating: 4.3, reviews: 4567,
+    words: ["lullaby", "cradle", "rattle", "nursery", "crib", "teddy", "blanket", "pacifier", "mobile", "bottle", "soft", "gentle", "diaper", "giggle", "cuddle"],
   },
   {
-    name: "Reversible Blanket Fort", category: "Home",
-    description: "Pop-up blanket fort for kids: one side is a castle, flip it for a spaceship. Magnetic panels, glow-in-the-dark stars inside, collapses flat for storage.",
-    price: "$69.99", rating: 4.8, reviews: 5678,
-    words: ["pillow", "flashlight", "dragon", "rocket", "blanket", "fortress", "tunnel", "hideout", "drawbridge", "turret"],
-  },
-
-  // ─── Wellness & Self-care ──────────────────────────
-  {
-    name: "Glow in the Dark Yoga Mat", category: "Wellness",
-    description: "Photoluminescent surface guides your poses in the dark. Alignment markers visible for 8+ hours. Non-slip, 6mm thick, TPE eco-friendly material.",
-    price: "$59.99", rating: 4.5, reviews: 3456,
-    words: ["stretch", "lotus", "incense", "meditate", "bamboo", "balance", "chakra", "breathe", "namaste", "zenith"],
+    name: "StageReady XLR Microphone",
+    category: "Music",
+    description: "Cardioid dynamic microphone with rugged metal body and internal shock mount. Low handling noise, wide frequency response, and includes 15ft XLR cable and desk stand.",
+    price: "$39.99", rating: 4.4, reviews: 5678,
+    words: ["melody", "chord", "rhythm", "tempo", "bass", "treble", "vocal", "guitar", "drum", "piano", "stage", "concert", "amplifier", "recording", "studio"],
   },
   {
-    name: "Lagoon Bath Bomb", category: "Wellness",
-    description: "Pack of 12 artisan bath bombs in ocean-inspired colors. Essential oils, coconut butter, and vitamin E. Each one dissolves into a different lagoon shade.",
-    price: "$22.99", rating: 4.7, reviews: 6789,
-    words: ["lavender", "bubble", "soak", "eucalyptus", "jasmine", "chamomile", "rosemary", "vanilla", "lather", "seashell"],
+    name: "SnapFrame Magnetic Picture Frame Set",
+    category: "Home",
+    description: "Set of 6 sleek magnetic frames in assorted sizes (4x6 to 8x10). Easy front-loading design, wall mount hardware included. Black matte finish complements any room.",
+    price: "$26.99", rating: 4.5, reviews: 3210,
+    words: ["photo", "memory", "frame", "wall", "gallery", "portrait", "snapshot", "album", "mount", "display", "border", "glass", "shelf", "decor", "picture"],
   },
   {
-    name: "Musical Shower Head", category: "Wellness",
-    description: "Bluetooth speaker built into a rainfall shower head. Waterproof, pairs with your phone. 3 spray patterns and LED temperature indicator.",
-    price: "$49.99", rating: 4.2, reviews: 4321,
-    words: ["lather", "shampoo", "rinse", "steam", "towel", "droplet", "faucet", "tile", "sponge", "cascade"],
+    name: "BrewMaster Pour-Over Coffee Maker",
+    category: "Kitchen",
+    description: "Elegant borosilicate glass carafe with stainless steel reusable filter. Brews 4 cups of rich, clean coffee. Includes measuring scoop and cleaning brush.",
+    price: "$27.99", rating: 4.6, reviews: 7654,
+    words: ["coffee", "brew", "filter", "roast", "bean", "grind", "espresso", "mug", "morning", "cream", "sugar", "aroma", "bold", "smooth", "drip"],
   },
   {
-    name: "Portable Zen Garden", category: "Wellness",
-    description: "Desktop sand garden with black volcanic sand, polished stones, and a miniature bamboo rake. Magnetic base keeps everything in place. Stress relief in a box.",
-    price: "$29.99", rating: 4.4, reviews: 2345,
-    words: ["pebble", "sand", "tranquil", "ripple", "bamboo", "stone", "calm", "harmony", "serenity", "gravel"],
+    name: "NightOwl Kids Astronomy Telescope",
+    category: "Science",
+    description: "70mm aperture refractor telescope with 2 eyepieces (20x and 40x), adjustable tripod, and smartphone adapter. Includes star map and beginner's astronomy guide.",
+    price: "$59.99", rating: 4.3, reviews: 2345,
+    words: ["star", "moon", "planet", "orbit", "telescope", "galaxy", "comet", "nebula", "lens", "crater", "jupiter", "saturn", "constellation", "meteor", "space"],
   },
   {
-    name: "Aura Reading Lamp", category: "Wellness",
-    description: "Infrared sensor analyzes your hand temperature and displays a corresponding color aura. Color therapy guide included. Also works as a great desk lamp.",
-    price: "$44.99", rating: 3.9, reviews: 890,
-    words: ["crystal", "amethyst", "topaz", "opal", "sapphire", "energy", "aura", "spectrum", "emerald", "quartz"],
-  },
-
-  // ─── Accessories & Fashion ─────────────────────────
-  {
-    name: "Pixel Sunglasses", category: "Fashion",
-    description: "LED matrix display on the lenses — show animations, messages, or just look cool. App-controlled. Polarized when display is off. UV400 protection.",
-    price: "$79.99", rating: 4.1, reviews: 2345,
-    words: ["mirror", "frame", "lens", "tinted", "aviator", "visor", "glare", "shade", "bridge", "temple"],
+    name: "ShutterPro Camera Lens Cleaning Kit",
+    category: "Photography",
+    description: "Complete 9-piece kit with air blower, lens pen, microfiber cloths, sensor swabs, and cleaning solution. Works with DSLR, mirrorless, and phone cameras.",
+    price: "$14.99", rating: 4.5, reviews: 8901,
+    words: ["lens", "camera", "focus", "shutter", "aperture", "flash", "tripod", "zoom", "frame", "exposure", "portrait", "landscape", "filter", "sensor", "capture"],
   },
   {
-    name: "Chameleon Paint Roller", category: "Fashion",
-    description: "Thermochromic roller that changes the painted surface's color with temperature. Hot room? Blue wall. Cold night? Purple. Includes 3 color-shift paints.",
-    price: "$34.99", rating: 4.0, reviews: 765,
-    words: ["pigment", "canvas", "stroke", "palette", "swatch", "roller", "primer", "tint", "mural", "acrylic"],
+    name: "WanderLux Packing Cube Set",
+    category: "Travel",
+    description: "6-piece compression packing cubes in 3 sizes with double zipper and mesh panel. Lightweight ripstop nylon saves up to 60% suitcase space. Includes shoe bag.",
+    price: "$21.99", rating: 4.4, reviews: 11234,
+    words: ["suitcase", "passport", "luggage", "boarding", "terminal", "flight", "hotel", "souvenir", "customs", "currency", "journey", "vacation", "compass", "ticket", "map"],
   },
   {
-    name: "Gyroscope Wallet", category: "Fashion",
-    description: "RFID-blocking slim wallet with a built-in gyroscopic fidget spinner on the money clip. Genuine leather, 8-card capacity, and anti-theft alert.",
-    price: "$39.99", rating: 4.3, reviews: 1678,
-    words: ["pocket", "receipt", "leather", "buckle", "zipper", "stitch", "clasp", "suede", "wallet", "snap"],
+    name: "PixelForge RGB Gaming Mouse",
+    category: "Gaming",
+    description: "Lightweight honeycomb shell with 26000 DPI optical sensor, 6 programmable buttons, and onboard memory for profiles. Paracord cable and PTFE glide feet included.",
+    price: "$44.99", rating: 4.5, reviews: 6789,
+    words: ["pixel", "render", "click", "scroll", "cursor", "respawn", "combo", "loot", "quest", "boss", "guild", "stream", "headshot", "clutch", "leaderboard"],
   },
   {
-    name: "Phase Shift Hoodie", category: "Fashion",
-    description: "Color-shifting fabric that changes hue based on viewing angle. Heavyweight 380gsm cotton fleece, kangaroo pocket, oversized fit, ribbed cuffs.",
-    price: "$74.99", rating: 4.5, reviews: 3456,
-    words: ["sleeve", "zipper", "cotton", "thread", "denim", "flannel", "stitch", "collar", "cuff", "velvet"],
+    name: "BambooBliss Cutting Board Set",
+    category: "Kitchen",
+    description: "Set of 3 organic bamboo cutting boards with juice groove and non-slip edges. Naturally antimicrobial, knife-friendly surface. Includes small, medium, and large sizes.",
+    price: "$24.99", rating: 4.5, reviews: 9012,
+    words: ["knife", "chop", "slice", "cutting", "bamboo", "kitchen", "recipe", "dinner", "meal", "prep", "board", "wooden", "surface", "durable", "cook"],
   },
   {
-    name: "Noise Cancelling Scarf", category: "Fashion",
-    description: "Cashmere-blend scarf with embedded bone-conduction speakers and ANC microphones. Take calls hands-free while staying warm. 6-hour battery.",
-    price: "$99.99", rating: 4.2, reviews: 1234,
-    words: ["wool", "knit", "cashmere", "fringe", "plaid", "tweed", "pashmina", "fleece", "weave", "tassel"],
-  },
-
-  // ─── Office & Productivity ─────────────────────────
-  {
-    name: "Inflatable Desk", category: "Office",
-    description: "Full-size standing desk that inflates in 60 seconds. Built-in air pump, cable management grooves, and cup holder. Supports 50 lbs. Deflates flat for travel.",
-    price: "$129.99", rating: 4.0, reviews: 876,
-    words: ["stapler", "folder", "memo", "binder", "drawer", "swivel", "cubicle", "monitor", "sticky", "planner"],
+    name: "CloudStep Orthopedic Insoles",
+    category: "Wellness",
+    description: "Medical-grade arch support insoles with deep heel cup and shock-absorbing gel. Fits most shoe types, trimmable to size. Relieves plantar fasciitis and flat foot pain.",
+    price: "$19.99", rating: 4.3, reviews: 13456,
+    words: ["foot", "arch", "heel", "cushion", "comfort", "walking", "support", "sole", "ankle", "stride", "step", "balance", "posture", "relief", "ortho"],
   },
   {
-    name: "Cipher Lock Diary", category: "Office",
-    description: "Leather journal with a 4-digit mechanical combination lock. 240 acid-free pages, ribbon bookmark, inner pocket for notes. Your secrets are safe.",
-    price: "$34.99", rating: 4.6, reviews: 5678,
-    words: ["quill", "inkwell", "parchment", "chapter", "margin", "fountain", "calligraphy", "wax", "seal", "script"],
+    name: "LittleChef Wooden Play Kitchen Set",
+    category: "Toys",
+    description: "12-piece pretend play kitchen set with wooden pots, pans, utensils, and food items. Non-toxic water-based paint, smooth rounded edges. Includes storage crate.",
+    price: "$28.99", rating: 4.6, reviews: 3456,
+    words: ["pretend", "wooden", "kitchen", "spoon", "plate", "pan", "cook", "recipe", "apron", "stir", "serve", "taste", "play", "imagine", "child"],
   },
   {
-    name: "Anti-Gravity Chair", category: "Office",
-    description: "Zero-gravity reclining office chair with lumbar heat, massage nodes, and memory foam headrest. Breathable mesh back, 360° swivel, and silent casters.",
-    price: "$449.99", rating: 4.7, reviews: 4321,
-    words: ["posture", "cushion", "armrest", "lumbar", "lever", "headrest", "recline", "backrest", "roller", "spring"],
+    name: "EcoFresh Bamboo Toothbrush Set",
+    category: "Bathroom",
+    description: "Pack of 8 biodegradable bamboo toothbrushes with charcoal-infused BPA-free bristles. Individually numbered for family use. Compostable handles, plastic-free packaging.",
+    price: "$11.99", rating: 4.2, reviews: 7890,
+    words: ["brush", "bristle", "clean", "rinse", "paste", "mint", "enamel", "gum", "floss", "mirror", "sink", "basin", "fresh", "white", "smile"],
   },
   {
-    name: "Memory Foam Mousepad", category: "Office",
-    description: "Ergonomic wrist rest with temperature-sensitive memory foam. Micro-textured surface for precise tracking. Anti-slip rubber base. Machine washable.",
-    price: "$19.99", rating: 4.4, reviews: 7654,
-    words: ["cursor", "click", "scroll", "keyboard", "trackpad", "desktop", "pixel", "pointer", "browser", "toolbar"],
+    name: "AutoGlow LED Headlight Bulbs",
+    category: "Automotive",
+    description: "Ultra-bright 12000 lumens LED headlight conversion kit with plug-and-play installation. 50000-hour lifespan, IP68 waterproof, 6500K cool white. Fits H11/H8/H9 sockets.",
+    price: "$34.99", rating: 4.4, reviews: 5432,
+    words: ["headlight", "beam", "bright", "bulb", "socket", "voltage", "wiring", "road", "night", "fog", "beam", "install", "hood", "fender", "lens"],
   },
   {
-    name: "Ambient Noise Jar", category: "Office",
-    description: "Twist the lid to select from 20 ambient sound environments: rain, café, forest, ocean, fireplace. High-fidelity 360° speaker. Beautiful ceramic design.",
-    price: "$59.99", rating: 4.5, reviews: 2345,
-    words: ["raindrop", "thunder", "cricket", "whisper", "fountain", "breeze", "birdsong", "rustle", "crackle", "murmur"],
-  },
-
-  // ─── Travel & Adventure ────────────────────────────
-  {
-    name: "Solar Backpack", category: "Travel",
-    description: "25L daypack with integrated flexible solar panel. Charges your phone in 3 hours of sunlight. Water-resistant, laptop sleeve, and hidden anti-theft pocket.",
-    price: "$89.99", rating: 4.3, reviews: 3456,
-    words: ["passport", "compass", "sunburn", "altitude", "horizon", "luggage", "terminal", "boarding", "itinerary", "souvenir"],
+    name: "SummitGear Collapsible Water Bottle",
+    category: "Outdoor",
+    description: "BPA-free silicone bottle that collapses to half its size when empty. 750ml capacity, leak-proof cap with carabiner clip. Dishwasher safe, rated -40°F to 446°F.",
+    price: "$14.99", rating: 4.3, reviews: 6543,
+    words: ["water", "hydrate", "bottle", "hike", "trail", "camping", "creek", "stream", "thirst", "adventure", "outdoors", "nature", "canteen", "squeeze", "sip"],
   },
   {
-    name: "Invisible Umbrella", category: "Travel",
-    description: "Air-curtain technology creates an invisible shield of air that deflects rain droplets. Battery-powered handle lasts 4 hours. Feels like magic.",
-    price: "$69.99", rating: 3.8, reviews: 1234,
-    words: ["puddle", "drizzle", "mist", "overcoat", "galosh", "sprinkle", "downpour", "cloudy", "slicker", "raindrop"],
+    name: "DeskRise Adjustable Laptop Stand",
+    category: "Office",
+    description: "Ergonomic aluminum laptop riser with 6 height angles. Open ventilation design prevents overheating. Foldable and portable, fits laptops 10-17 inches. Non-slip pads included.",
+    price: "$29.99", rating: 4.5, reviews: 8765,
+    words: ["laptop", "desk", "posture", "screen", "typing", "ergonomic", "office", "stand", "aluminum", "angle", "monitor", "height", "adjust", "fold", "work"],
   },
   {
-    name: "Pocket Weather Machine", category: "Travel",
-    description: "Handheld weather station: temperature, humidity, barometric pressure, UV index, wind speed, and altitude. Bluetooth syncs to your phone. Carabiner clip included.",
-    price: "$59.99", rating: 4.4, reviews: 2109,
-    words: ["forecast", "barometer", "drizzle", "cumulus", "breeze", "humidity", "dewpoint", "cyclone", "tornado", "gust"],
+    name: "BerryBlend Smoothie Blender Bottle",
+    category: "Kitchen",
+    description: "Portable USB-C rechargeable personal blender with 6 stainless steel blades. Makes smoothies in 30 seconds, 18oz capacity. BPA-free Tritan plastic, dishwasher-safe cup.",
+    price: "$26.99", rating: 4.2, reviews: 5432,
+    words: ["smoothie", "blend", "fruit", "banana", "strawberry", "mango", "protein", "yogurt", "shake", "berry", "spinach", "juice", "vitamin", "refresh", "blend"],
   },
   {
-    name: "Tornado Water Bottle", category: "Travel",
-    description: "Creates a mini vortex when shaken to mix powders and supplements. Leak-proof, double-walled insulation keeps drinks cold for 24 hours. 750ml capacity.",
-    price: "$24.99", rating: 4.5, reviews: 6789,
-    words: ["glacier", "spring", "filter", "hydrate", "mineral", "sparkling", "aqua", "stream", "sip", "crisp"],
+    name: "VelvetTouch Makeup Brush Set",
+    category: "Fashion",
+    description: "15-piece professional makeup brush collection with synthetic vegan bristles. Includes foundation, contour, blush, eyeshadow, and blending brushes in a leather roll case.",
+    price: "$24.99", rating: 4.4, reviews: 9876,
+    words: ["brush", "powder", "blush", "contour", "palette", "shade", "blend", "primer", "gloss", "mascara", "liner", "brow", "foundation", "beauty", "mirror"],
   },
   {
-    name: "Cryogenic Cooler Bag", category: "Travel",
-    description: "Phase-change cooling inserts keep contents frozen for 72 hours without ice. Collapsible when empty. Holds 24 cans. Shoulder strap and bottle opener included.",
-    price: "$79.99", rating: 4.6, reviews: 4321,
-    words: ["icebox", "frost", "glacier", "arctic", "blizzard", "tundra", "icicle", "snowflake", "cooler", "penguin"],
-  },
-
-  // ─── Toys & Games ─────────────────────────────────
-  {
-    name: "Puzzle Lock Box", category: "Toys",
-    description: "3D wooden puzzle box that only opens when you solve all 5 mechanical challenges. Hide gifts, money, or secrets inside. Handcrafted from walnut.",
-    price: "$44.99", rating: 4.6, reviews: 3456,
-    words: ["riddle", "maze", "clue", "jigsaw", "labyrinth", "cipher", "enigma", "padlock", "trick", "hinge"],
+    name: "StringMaster Acoustic Guitar Capo",
+    category: "Music",
+    description: "Professional-grade zinc alloy capo with silicone pad for buzz-free clamping. Spring-loaded single-hand operation. Fits acoustic, electric, and classical guitars.",
+    price: "$9.99", rating: 4.6, reviews: 12345,
+    words: ["guitar", "string", "chord", "fret", "strum", "pick", "acoustic", "melody", "tuning", "capo", "bridge", "neck", "solo", "riff", "harmony"],
   },
   {
-    name: "Liquid Metal Fidget Toy", category: "Toys",
-    description: "Gallium-alloy blob in a sealed glass case. Melts and reforms with your body heat. Mesmerizing to watch. Desktop stress relief for adults.",
-    price: "$19.99", rating: 4.3, reviews: 5678,
-    words: ["mercury", "bubble", "sphere", "droplet", "wobble", "stretch", "morph", "gooey", "silicone", "marble"],
+    name: "FrostGuard Windshield Snow Cover",
+    category: "Automotive",
+    description: "Extra-thick 4-layer windshield cover with magnetic edges and mirror covers. Prevents ice, frost, and snow buildup. Universal fit for cars, trucks, and SUVs. Folds into storage pouch.",
+    price: "$18.99", rating: 4.3, reviews: 7654,
+    words: ["windshield", "frost", "ice", "snow", "winter", "scraper", "wiper", "cold", "freeze", "defrost", "morning", "cover", "protect", "weather", "clear"],
   },
   {
-    name: "Electric Paper Airplane", category: "Toys",
-    description: "Motor module clips onto any paper airplane for powered flight. 30-second flights, auto-circle mode, and propeller guard. USB rechargeable.",
-    price: "$14.99", rating: 4.7, reviews: 8765,
-    words: ["runway", "cockpit", "turbine", "altitude", "wingspan", "propeller", "glider", "hangar", "breeze", "takeoff"],
+    name: "TinySprout Montessori Stacking Toy",
+    category: "Baby",
+    description: "Natural beechwood stacking rings with food-grade silicone pieces in soft pastel colors. Develops fine motor skills and color recognition. Ages 6 months+. CPSIA certified.",
+    price: "$18.99", rating: 4.5, reviews: 4321,
+    words: ["stack", "ring", "color", "wooden", "baby", "grasp", "learn", "play", "gentle", "safe", "toy", "round", "build", "toddler", "explore"],
   },
   {
-    name: "Perpetual Motion Toy", category: "Toys",
-    description: "Elegant desk sculpture with balanced arms that swing continuously using ambient vibrations. Brass and walnut construction. Hypnotic to watch.",
-    price: "$39.99", rating: 4.1, reviews: 1234,
-    words: ["pendulum", "balance", "orbit", "spindle", "cradle", "Newton", "momentum", "kinetic", "gravity", "pivot"],
+    name: "ProKick Indoor Soccer Ball",
+    category: "Sports",
+    description: "Low-bounce felt-covered indoor soccer ball, size 5. Reduced noise for indoor play, machine-stitched panels. Great for futsal, gym class, and indoor training.",
+    price: "$19.99", rating: 4.3, reviews: 3456,
+    words: ["kick", "goal", "field", "dribble", "pass", "striker", "penalty", "referee", "jersey", "cleats", "halftime", "score", "corner", "defend", "match"],
   },
   {
-    name: "Topography Puzzle", category: "Toys",
-    description: "1000-piece jigsaw puzzle of a procedurally generated mountain range. Every puzzle is unique — scan the QR code to see the 3D model of your completed landscape.",
-    price: "$29.99", rating: 4.5, reviews: 2345,
-    words: ["mountain", "contour", "plateau", "summit", "valley", "ridge", "terrain", "elevation", "peak", "slope"],
-  },
-
-  // ─── Pets & Animals ────────────────────────────────
-  {
-    name: "Mood Ring Speaker", category: "Pets",
-    description: "Pet-safe Bluetooth speaker that plays calming frequencies. Mood ring LED shows your pet's stress level via ambient noise analysis. Waterproof bowl design.",
-    price: "$39.99", rating: 4.2, reviews: 1234,
-    words: ["kibble", "squeaky", "leash", "kennel", "whisker", "snout", "collar", "belly", "paw", "fetch"],
+    name: "SereneScape Essential Oil Diffuser",
+    category: "Wellness",
+    description: "Ultrasonic aromatherapy diffuser with 300ml tank, 7 LED color modes, and whisper-quiet operation. Auto shut-off when water runs low. Covers up to 300 sq ft.",
+    price: "$24.99", rating: 4.5, reviews: 10234,
+    words: ["lavender", "eucalyptus", "jasmine", "mist", "aroma", "scent", "calm", "relax", "diffuser", "essential", "steam", "breathe", "mood", "spa", "tranquil"],
   },
   {
-    name: "Self Watering Cactus Pot", category: "Pets",
-    description: "Smart pot with reservoir that waters your cactus for up to 3 weeks. Moisture sensor LED tells you when to refill. Ceramic with drainage. Plant not included.",
-    price: "$24.99", rating: 4.4, reviews: 3456,
-    words: ["thorn", "desert", "succulent", "sprout", "terracotta", "root", "stem", "prickly", "aloe", "bloom"],
+    name: "UrbanPack Convertible Messenger Bag",
+    category: "Travel",
+    description: "Versatile waxed canvas bag that converts between messenger, backpack, and briefcase modes. Padded 15-inch laptop sleeve, RFID pocket, and waterproof base panel.",
+    price: "$49.99", rating: 4.4, reviews: 5678,
+    words: ["bag", "strap", "pocket", "zipper", "canvas", "buckle", "shoulder", "laptop", "commute", "travel", "organize", "durable", "messenger", "carry", "urban"],
+  },
+  {
+    name: "SparkCreate 3D Printing Pen",
+    category: "Toys",
+    description: "Kid-safe 3D printing pen with adjustable speed, USB powered, and low-temperature PLA filament. Includes 12 color refills and stencil template booklet. Ages 8+.",
+    price: "$29.99", rating: 4.2, reviews: 4567,
+    words: ["create", "draw", "design", "shape", "build", "color", "plastic", "mold", "craft", "art", "imagine", "model", "sculpt", "pen", "print"],
+  },
+  {
+    name: "GreenGuard Plant Moisture Meter",
+    category: "Garden",
+    description: "3-in-1 soil tester measures moisture, pH, and light levels. No battery needed. Works with indoor and outdoor plants, lawns, and gardens. Includes plant care guide.",
+    price: "$12.99", rating: 4.2, reviews: 6789,
+    words: ["soil", "moisture", "root", "plant", "garden", "water", "leaf", "seed", "grow", "sunshine", "fertilizer", "pot", "dirt", "compost", "green"],
+  },
+  {
+    name: "SafeStep LED Night Light",
+    category: "Home",
+    description: "Motion-activated plug-in night light with adjustable brightness and warm/cool white modes. Smart dusk-to-dawn sensor, energy-efficient LED. Perfect for hallways and bathrooms.",
+    price: "$12.99", rating: 4.4, reviews: 8765,
+    words: ["night", "glow", "hallway", "sensor", "dark", "plug", "bedroom", "stair", "motion", "dim", "bright", "warm", "pathway", "safety", "automatic"],
+  },
+  {
+    name: "CrystalClear Screen Protector Pack",
+    category: "Tech",
+    description: "3-pack tempered glass screen protectors with 9H hardness rating and oleophobic coating. Bubble-free installation frame included. Ultra-thin 0.33mm with full coverage.",
+    price: "$10.99", rating: 4.3, reviews: 15678,
+    words: ["screen", "glass", "phone", "crack", "protect", "clear", "thin", "touch", "install", "bubble", "surface", "scratch", "shield", "film", "display"],
+  },
+  {
+    name: "PeakPerformance Climbing Chalk Bag",
+    category: "Sports",
+    description: "Drawstring chalk bag with fleece-lined interior and zippered pocket for keys. Adjustable waist belt and brush holder loop. Wide opening for easy hand access.",
+    price: "$16.99", rating: 4.5, reviews: 3210,
+    words: ["chalk", "grip", "climb", "boulder", "wall", "rope", "harness", "summit", "hold", "reach", "ledge", "ascend", "power", "finger", "route"],
+  },
+  {
+    name: "SnugglePaws Calming Dog Bed",
+    category: "Pets",
+    description: "Donut-shaped self-warming pet bed with ultra-soft faux fur. Raised rim provides head support and security. Machine washable, non-slip bottom. Fits pets up to 45 lbs.",
+    price: "$34.99", rating: 4.5, reviews: 8901,
+    words: ["dog", "bed", "cozy", "warm", "furry", "nap", "puppy", "snuggle", "soft", "plush", "rest", "sleep", "donut", "calm", "pet"],
+  },
+  {
+    name: "FocusLens Blue Light Glasses",
+    category: "Office",
+    description: "Lightweight TR90 frames with anti-blue light lenses that reduce eye strain during screen time. Spring hinges for comfort, clear lens with minimal color distortion.",
+    price: "$17.99", rating: 4.3, reviews: 11234,
+    words: ["screen", "eye", "glasses", "lens", "frame", "focus", "reading", "clear", "vision", "computer", "light", "strain", "comfort", "wear", "office"],
+  },
+  {
+    name: "CanvasCraft Adult Paint-by-Numbers Kit",
+    category: "Art",
+    description: "Relaxing 16x20 inch paint-by-numbers kit with pre-printed canvas, 24 acrylic paint pots, and 3 brush sizes. Frame-ready when complete. Multiple scenic designs available.",
+    price: "$16.99", rating: 4.4, reviews: 6543,
+    words: ["paint", "canvas", "brush", "color", "number", "acrylic", "portrait", "frame", "create", "relax", "art", "detail", "stroke", "picture", "hobby"],
   },
 ];
 
+/* ═══════════════════════════════════════════════════════
+   PRE-GENERATION QUEUE
+   ═══════════════════════════════════════════════════════ */
+
+let _preGenerated = null;     // next product ready to use
+let _preGenPromise = null;    // promise for in-flight generation
+let _usedProductNames = [];
+let _usedWordsList = [];
+let _geminiAvailable = true;  // tracks if Gemini is responding
+let _fallbackIndex = 0;       // cycles through fallback catalog
+
 /**
- * Get a random product with its full metadata
- * @param {string[]} exclude - Product names to exclude
- * @returns {{ name, category, description, price, rating, reviews, words }}
+ * Shuffle fallback catalog on first load
  */
-export function getRandomProduct(exclude = []) {
-  const available = CATALOG.filter((p) => !exclude.includes(p.name));
-  if (available.length === 0) return CATALOG[Math.floor(Math.random() * CATALOG.length)];
-  return available[Math.floor(Math.random() * available.length)];
+const _shuffledFallback = [...FALLBACK_CATALOG].sort(() => Math.random() - 0.5);
+
+/**
+ * Get a fallback product from the static catalog
+ */
+function getFallbackProduct(exclude = []) {
+  for (let i = 0; i < _shuffledFallback.length; i++) {
+    const idx = (_fallbackIndex + i) % _shuffledFallback.length;
+    const p = _shuffledFallback[idx];
+    if (!exclude.includes(p.name)) {
+      _fallbackIndex = idx + 1;
+      return { ...p, imageUrl: null };
+    }
+  }
+  // All used — reset and return any
+  _fallbackIndex = 0;
+  return { ..._shuffledFallback[0], imageUrl: null };
 }
 
 /**
- * Get a random word from a product's word pool
- * @param {object} product - A product from CATALOG
- * @param {string[]} exclude - Words to exclude
+ * Try to generate a product via Gemini, fall back to static catalog.
+ * @param {string[]} usedNames
+ * @returns {Promise<object>}
+ */
+async function generateProduct(usedNames = []) {
+  if (!_geminiAvailable) {
+    return getFallbackProduct(usedNames);
+  }
+
+  try {
+    const product = await generateFullProduct(usedNames);
+    if (product) {
+      _geminiAvailable = true;
+      return product;
+    }
+    // Gemini returned null — use fallback
+    return getFallbackProduct(usedNames);
+  } catch (err) {
+    console.warn('[ProductGen] Gemini failed, using fallback:', err.message);
+    _geminiAvailable = false;
+    // Re-enable after 60s
+    setTimeout(() => { _geminiAvailable = true; }, 60000);
+    return getFallbackProduct(usedNames);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   PUBLIC API — matches the old sync API shape but async
+   ═══════════════════════════════════════════════════════ */
+
+/**
+ * Start pre-generating the next product in the background.
+ * Call this at the start of each round so the next one is ready.
+ * @param {string[]} usedNames
+ */
+export function preGenerateNextProduct(usedNames = []) {
+  if (_preGenPromise) return; // already generating
+
+  _preGenPromise = generateProduct(usedNames)
+    .then((product) => {
+      _preGenerated = product;
+      _preGenPromise = null;
+      console.log('[ProductGen] Pre-generated:', product.name);
+    })
+    .catch((err) => {
+      _preGenPromise = null;
+      console.warn('[ProductGen] Pre-generation failed:', err.message);
+    });
+}
+
+/**
+ * Get the next product. Uses pre-generated if available,
+ * otherwise generates on-the-fly (with loading delay).
+ * @param {string[]} exclude - Product names to exclude
+ * @returns {Promise<object>} Full product object
+ */
+export async function getRandomProduct(exclude = []) {
+  // If we have a pre-generated product and it's not excluded
+  if (_preGenerated && !exclude.includes(_preGenerated.name)) {
+    const product = _preGenerated;
+    _preGenerated = null;
+    return product;
+  }
+
+  // If pre-generation is in flight, wait for it
+  if (_preGenPromise) {
+    await _preGenPromise;
+    if (_preGenerated && !exclude.includes(_preGenerated.name)) {
+      const product = _preGenerated;
+      _preGenerated = null;
+      return product;
+    }
+  }
+
+  // Generate on the fly
+  return await generateProduct(exclude);
+}
+
+/**
+ * Get a random word from a product's word pool (sync).
+ * @param {object} product
+ * @param {string[]} exclude
  * @returns {string}
  */
 export function getMatchedWord(product, exclude = []) {
   const pool = product.words || [];
   const available = pool.filter((w) => !exclude.includes(w));
-  if (available.length === 0) return pool[Math.floor(Math.random() * pool.length)];
+  if (available.length === 0) {
+    return pool[Math.floor(Math.random() * pool.length)] || 'secret';
+  }
   return available[Math.floor(Math.random() * available.length)];
 }
 
-export { CATALOG };
-export default CATALOG;
+/**
+ * Reset generator state (call on new game start)
+ */
+export function resetGenerator() {
+  _preGenerated = null;
+  _preGenPromise = null;
+  _usedProductNames = [];
+  _usedWordsList = [];
+  _fallbackIndex = 0;
+}
+
+export { FALLBACK_CATALOG };

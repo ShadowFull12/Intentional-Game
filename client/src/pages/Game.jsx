@@ -45,6 +45,7 @@ export default function Game() {
   const timerEnd = useGameStore((s) => s.timerEnd);
   const votingResults = useGameStore((s) => s.votingResults);
   const scores = useGameStore((s) => s.scores);
+  const isGeneratingProduct = useGameStore((s) => s.isGeneratingProduct);
 
   // Redirect if no room
   useEffect(() => {
@@ -246,6 +247,63 @@ export default function Game() {
               <p className="text-white/30 text-sm mt-2">
                 Round {round + 1} of {maxRounds}
               </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ─── Generating Product Overlay ─────────── */}
+        <AnimatePresence>
+          {isGeneratingProduct && (
+            <motion.div
+              key="generatingProduct"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-dark-900/80 backdrop-blur-md"
+            >
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                className="glass rounded-3xl p-8 max-w-sm mx-4 text-center border border-accent/20 shadow-glass"
+              >
+                {/* Animated loading icon */}
+                <div className="relative w-16 h-16 mx-auto mb-6">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ repeat: Infinity, duration: 3, ease: 'linear' }}
+                    className="absolute inset-0 rounded-full border-2 border-transparent border-t-accent border-r-accent/50"
+                  />
+                  <motion.div
+                    animate={{ rotate: -360 }}
+                    transition={{ repeat: Infinity, duration: 2, ease: 'linear' }}
+                    className="absolute inset-2 rounded-full border-2 border-transparent border-b-neon-green border-l-neon-green/50"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center text-2xl">
+                    🛍️
+                  </div>
+                </div>
+
+                <h3 className="text-lg font-display font-bold text-white mb-2">
+                  Generating Product
+                </h3>
+                <p className="text-sm text-white/40">
+                  AI is crafting your next product...
+                </p>
+
+                {/* Animated dots */}
+                <div className="flex justify-center gap-1 mt-4">
+                  {[0, 1, 2].map((i) => (
+                    <motion.div
+                      key={i}
+                      animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
+                      transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.2 }}
+                      className="w-2 h-2 rounded-full bg-accent"
+                    />
+                  ))}
+                </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

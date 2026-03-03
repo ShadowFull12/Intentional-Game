@@ -17,7 +17,7 @@ import {
 } from 'firebase/database';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '../utils/firebase';
-import { getRandomProduct, getMatchedWord } from '../utils/productGenerator';
+import { getRandomProduct, getMatchedWord, preGenerateNextProduct, resetGenerator } from '../utils/productGenerator';
 import { playPhaseChange, playSubmit, playVote } from '../utils/sounds';
 
 /* ─── Constants ─────────────────────────────────────── */
@@ -111,6 +111,7 @@ export const useGameStore = create((set, get) => ({
   votingResults: null,
   scores: [],
   error: null,
+  isGeneratingProduct: false,
 
   // ─── Actions ─────────────────────────────────────────
   setError: (error) => set({ error }),
@@ -226,6 +227,7 @@ export const useGameStore = create((set, get) => ({
 
     _usedProducts = [];
     _usedWords = [];
+    resetGenerator();
     await get()._hostStartRound(roomId);
     return { success: true };
   },
@@ -297,6 +299,7 @@ export const useGameStore = create((set, get) => ({
       error: null,
       hasSubmittedReview: false,
       hasVoted: false,
+      isGeneratingProduct: false,
     });
   },
 
@@ -324,6 +327,7 @@ export const useGameStore = create((set, get) => ({
         maxRounds: data.maxRounds || MAX_ROUNDS,
         product: data.product || null,
         timerEnd: data.timerEnd || null,
+        isGeneratingProduct: data.isGeneratingProduct || false,
       };
 
       // Reset per-phase state on phase change
@@ -420,7 +424,10 @@ export const useGameStore = create((set, get) => ({
     const { players, round } = get();
     const newRound = (round || 0) + 1;
 
-    const productObj = getRandomProduct(_usedProducts);
+    // Show loading state while generating product via Gemini
+    await dbUpdate(ref(db, `rooms/${roomId}/info`), { isGeneratingProduct: true });
+
+    const productObj = await getRandomProduct(_usedProducts);
     const word = getMatchedWord(productObj, _usedWords);
     _usedProducts.push(productObj.name);
     _usedWords.push(word);
@@ -433,6 +440,7 @@ export const useGameStore = create((set, get) => ({
       price: productObj.price,
       rating: productObj.rating,
       reviews: productObj.reviews,
+      imageUrl: productObj.imageUrl || null,
     };
 
     const playerIds = players.map((p) => p.id);
@@ -458,6 +466,7 @@ export const useGameStore = create((set, get) => ({
     updates[`rooms/${roomId}/info/round`] = newRound;
     updates[`rooms/${roomId}/info/product`] = productData;
     updates[`rooms/${roomId}/info/timerEnd`] = Date.now() + DURATIONS.productReveal;
+    updates[`rooms/${roomId}/info/isGeneratingProduct`] = false;
 
     await dbUpdate(ref(db), updates);
 
@@ -485,6 +494,8 @@ export const useGameStore = create((set, get) => ({
 
     // Schedule auto-advance
     if (phase === PHASES.WRITING) {
+      // Pre-generate next round's product while players write
+      preGenerateNextProduct(_usedProducts);
       _phaseTimer = setTimeout(() => get()._hostCollectReviews(roomId), duration);
     } else if (phase === PHASES.REVEAL) {
       _phaseTimer = setTimeout(() => {

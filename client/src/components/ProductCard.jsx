@@ -40,6 +40,38 @@ export default function ProductCard({ product, hiddenWord, isHidden }) {
   const rating = typeof product === 'object' ? product.rating : null;
   const reviewCount = typeof product === 'object' ? product.reviews : null;
   const category = typeof product === 'object' ? product.category : null;
+  const imageUrl = typeof product === 'object' ? product.imageUrl : null;
+
+  // Category-based gradient fallback when no AI image
+  const categoryGradients = {
+    Kitchen: 'from-orange-500/20 to-amber-600/20',
+    Tech: 'from-blue-500/20 to-cyan-600/20',
+    Outdoor: 'from-green-500/20 to-emerald-600/20',
+    Home: 'from-purple-500/20 to-violet-600/20',
+    Wellness: 'from-teal-500/20 to-cyan-600/20',
+    Fashion: 'from-pink-500/20 to-rose-600/20',
+    Office: 'from-slate-500/20 to-gray-600/20',
+    Travel: 'from-sky-500/20 to-blue-600/20',
+    Toys: 'from-yellow-500/20 to-orange-600/20',
+    Pets: 'from-amber-500/20 to-yellow-600/20',
+    Garden: 'from-lime-500/20 to-green-600/20',
+    Music: 'from-indigo-500/20 to-purple-600/20',
+    Sports: 'from-red-500/20 to-orange-600/20',
+    Art: 'from-fuchsia-500/20 to-pink-600/20',
+    Science: 'from-violet-500/20 to-indigo-600/20',
+    Bathroom: 'from-cyan-500/20 to-teal-600/20',
+    Automotive: 'from-zinc-500/20 to-slate-600/20',
+    Gaming: 'from-emerald-500/20 to-green-600/20',
+    Photography: 'from-amber-500/20 to-orange-600/20',
+    Baby: 'from-pink-400/20 to-rose-500/20',
+  };
+  const gradient = categoryGradients[category] || 'from-accent/20 to-purple-600/20';
+  const categoryEmojis = {
+    Kitchen: '🍳', Tech: '💻', Outdoor: '🏕️', Home: '🏠', Wellness: '🧘',
+    Fashion: '👗', Office: '📎', Travel: '✈️', Toys: '🧸', Pets: '🐾',
+    Garden: '🌱', Music: '🎵', Sports: '⚽', Art: '🎨', Science: '🔬',
+    Bathroom: '🚿', Automotive: '🚗', Gaming: '🎮', Photography: '📷', Baby: '👶',
+  };
 
   return (
     <motion.div
@@ -59,6 +91,26 @@ export default function ProductCard({ product, hiddenWord, isHidden }) {
           </span>
         )}
       </div>
+
+      {/* Product Image */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="relative overflow-hidden"
+      >
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={name}
+            className="w-full h-48 object-contain bg-white/5 p-4"
+          />
+        ) : (
+          <div className={`w-full h-32 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+            <span className="text-4xl opacity-60">{categoryEmojis[category] || '📦'}</span>
+          </div>
+        )}
+      </motion.div>
 
       {/* Main product info */}
       <div className="p-5 space-y-3">
