@@ -86,6 +86,28 @@ export default function Home() {
             </h2>
           </motion.div>
 
+          {/* White text clone — revealed only under the spotlight via CSS mask */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 z-20 pointer-events-none detective-flashlight-text"
+          >
+            <h1
+              className="text-6xl md:text-8xl font-display font-bold tracking-tight leading-none"
+              style={{ letterSpacing: '0.04em' }}
+            >
+              <span className="text-white" style={{ textShadow: '0 0 30px rgba(255,255,255,0.6), 0 0 60px rgba(139,92,246,0.3)' }}>
+                Intentional
+              </span>
+            </h1>
+            <h2
+              className="font-serif italic font-semibold text-2xl md:text-4xl mt-2 md:mt-3 tracking-wide"
+              style={{ letterSpacing: '0.15em' }}
+            >
+              <span className="text-white" style={{ textShadow: '0 0 25px rgba(255,255,255,0.7), 0 0 50px rgba(139,92,246,0.4)' }}>
+                Reviews
+              </span>
+            </h2>
+          </div>
         </div>
 
         <motion.p

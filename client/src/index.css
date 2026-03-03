@@ -128,6 +128,48 @@ body {
 }
 
 /* ─── Scrollbar ───────────────────────────────────── */
+
+/* White text mask overlay — reveals white text only where spotlight shines.
+ * mask-size: 400% 800% gives plenty of oversized canvas for the 180px circle
+ * to move without clipping. Keyframes are synced to detectiveSearch timing
+ * but use element-relative percentages.
+ */
+.detective-flashlight-text {
+  -webkit-mask-image: radial-gradient(circle 180px, white 0%, white 30%, transparent 70%);
+  mask-image: radial-gradient(circle 180px, white 0%, white 30%, transparent 70%);
+  -webkit-mask-size: 400% 800%;
+  mask-size: 400% 800%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  animation: detectiveSearchText 12s ease-in-out infinite;
+  will-change: -webkit-mask-position, mask-position;
+}
+
+@keyframes detectiveSearchText {
+  /* Off-screen left */
+  0%   { -webkit-mask-position: 100% 53%; mask-position: 100% 53%; }
+  /* Sweep in — left of "Intentional" */
+  10%  { -webkit-mask-position: 59% 53%;  mask-position: 59% 53%; }
+  /* Centre of "Intentional" */
+  20%  { -webkit-mask-position: 50% 53%;  mask-position: 50% 53%; }
+  /* Right edge of "Intentional" */
+  30%  { -webkit-mask-position: 40% 53%;  mask-position: 40% 53%; }
+  /* Sweep back left */
+  40%  { -webkit-mask-position: 56% 53%;  mask-position: 56% 53%; }
+  /* Drift further left */
+  48%  { -webkit-mask-position: 64% 53%;  mask-position: 64% 53%; }
+  /* Return to centre */
+  56%  { -webkit-mask-position: 50% 53%;  mask-position: 50% 53%; }
+  /* Creep toward "Reviews" */
+  65%  { -webkit-mask-position: 50% 49%;  mask-position: 50% 49%; }
+  /* Lock on "Reviews" */
+  72%  { -webkit-mask-position: 50% 45%;  mask-position: 50% 45%; }
+  /* Hold — discovery moment */
+  90%  { -webkit-mask-position: 50% 45%;  mask-position: 50% 45%; }
+  /* Exit left */
+  100% { -webkit-mask-position: 100% 53%; mask-position: 100% 53%; }
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }
