@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Lobby from './pages/Lobby';
 import Game from './pages/Game';
 import Results from './pages/Results';
+import BackgroundMusic from './components/BackgroundMusic';
 
 function App() {
   return (
@@ -20,6 +21,8 @@ function App() {
           <Route path="/game" element={<Game />} />
           <Route path="/results" element={<Results />} />
         </Routes>
+        {/* Persistent background music across all pages */}
+        <BackgroundMusic />
       </div>
     </GameProvider>
   );
