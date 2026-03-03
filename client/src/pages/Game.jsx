@@ -82,8 +82,8 @@ export default function Game() {
       >
         <div className="flex items-center gap-4">
           <h1 className="text-lg font-display font-bold">
-            <span className="text-white/60">Inten</span>
-            <span className="neon-text">tional</span>
+            <span className="text-white/60">Intentional</span>
+            <span className="neon-text ml-1.5 font-serif italic text-base">Reviews</span>
           </h1>
           <span className="text-xs text-white/20 hidden sm:inline">Room: {roomId}</span>
         </div>

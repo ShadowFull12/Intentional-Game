@@ -33,6 +33,7 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         display: ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
+        serif: ['Playfair Display', 'Georgia', 'serif'],
       },
       boxShadow: {
         'glass': '0 8px 32px 0 rgba(139, 92, 246, 0.15)',

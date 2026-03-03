@@ -1,4 +1,4 @@
-# 🎭 Intentional
+# 🎭 Intentional Reviews
 
 A real-time multiplayer social deduction game where players write fake product reviews and try to spot the player hiding a secret word.
 
@@ -20,7 +20,7 @@ A real-time multiplayer social deduction game where players write fake product r
 - **Room codes** — Create a room and share a 4-letter code with friends
 - **Dynamic products** — Powered by Gemini for unique products each round with automatic fallback catalog
 - **Pre-generation** — Next round's product is prepared in the background while you play
-- **Animated UI** — Smooth transitions, confetti, and a flashlight title effect
+- **Animated UI** — Smooth transitions, confetti, and a detective-style flashlight animation
 - **Mobile-friendly** — Fully responsive design
 - **No accounts needed** — Anonymous authentication gets you playing in seconds
 

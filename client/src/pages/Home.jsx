@@ -56,30 +56,73 @@ export default function Home() {
         transition={{ duration: 0.8, ease: 'easeOut' }}
         className="text-center mb-12"
       >
-        <motion.h1
-          className="text-6xl md:text-8xl font-display font-bold tracking-tight relative select-none"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          {/* Base violet text */}
-          <span className="text-accent" style={{ textShadow: '0 0 10px rgba(139,92,246,0.4)' }}>
-            Intentional
-          </span>
-          {/* Flashlight overlay — white text masked by animated spotlight */}
-          <span
-            aria-hidden="true"
-            className="absolute inset-0 text-white flashlight-sweep pointer-events-none"
-            style={{ textShadow: '0 0 20px rgba(255,255,255,0.6), 0 0 40px rgba(139,92,246,0.3)' }}
+        {/* ── Title Block with full-screen flashlight ───── */}
+        <div className="relative select-none">
+          {/* Full-screen flashlight overlay — covers entire page */}
+          <div
+            className="detective-flashlight pointer-events-none fixed inset-0 z-30"
+            style={{
+              background: 'radial-gradient(circle 120px, rgba(255,255,255,0.08) 0%, transparent 100%)',
+            }}
+          />
+
+          {/* Main title: "Intentional" */}
+          <motion.div
+            className="relative z-10"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Intentional
-          </span>
-        </motion.h1>
+            <h1
+              className="text-6xl md:text-8xl font-display font-bold tracking-tight leading-none"
+              style={{ letterSpacing: '0.04em' }}
+            >
+              {/* Base violet text */}
+              <span className="text-accent/80" style={{ textShadow: '0 0 15px rgba(139,92,246,0.3)' }}>
+                Intentional
+              </span>
+            </h1>
+
+            {/* "Reviews" subtitle — different typography */}
+            <h2
+              className="font-serif italic font-semibold text-2xl md:text-4xl mt-2 md:mt-3 tracking-wide"
+              style={{ letterSpacing: '0.15em' }}
+            >
+              <span className="text-white/30" style={{ textShadow: '0 0 8px rgba(139,92,246,0.2)' }}>
+                Reviews
+              </span>
+            </h2>
+          </motion.div>
+
+          {/* Flashlight text overlay — white text revealed by spotlight mask */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 z-20 pointer-events-none detective-flashlight-text"
+          >
+            <h1
+              className="text-6xl md:text-8xl font-display font-bold tracking-tight leading-none"
+              style={{ letterSpacing: '0.04em' }}
+            >
+              <span className="text-white" style={{ textShadow: '0 0 30px rgba(255,255,255,0.7), 0 0 60px rgba(139,92,246,0.4)' }}>
+                Intentional
+              </span>
+            </h1>
+            <h2
+              className="font-serif italic font-semibold text-2xl md:text-4xl mt-2 md:mt-3 tracking-wide"
+              style={{ letterSpacing: '0.15em' }}
+            >
+              <span className="text-white" style={{ textShadow: '0 0 25px rgba(255,255,255,0.8), 0 0 50px rgba(139,92,246,0.5)' }}>
+                Reviews
+              </span>
+            </h2>
+          </div>
+        </div>
+
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="text-white/40 mt-3 text-lg font-light"
+          className="text-white/40 mt-5 text-lg font-light"
         >
           Write. Deceive. Detect.
         </motion.p>
