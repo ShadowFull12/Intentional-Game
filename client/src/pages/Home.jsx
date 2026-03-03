@@ -3,7 +3,7 @@
  * Landing screen with create/join room options
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../context/GameContext';
@@ -57,13 +57,23 @@ export default function Home() {
         className="text-center mb-12"
       >
         <motion.h1
-          className="text-6xl md:text-8xl font-display font-bold tracking-tight"
+          className="text-6xl md:text-8xl font-display font-bold tracking-tight relative select-none"
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <span className="text-white">Inten</span>
-          <span className="neon-text">tional</span>
+          {/* Base violet text */}
+          <span className="text-accent" style={{ textShadow: '0 0 10px rgba(139,92,246,0.4)' }}>
+            Intentional
+          </span>
+          {/* Flashlight overlay — white text masked by animated spotlight */}
+          <span
+            aria-hidden="true"
+            className="absolute inset-0 text-white flashlight-sweep pointer-events-none"
+            style={{ textShadow: '0 0 20px rgba(255,255,255,0.6), 0 0 40px rgba(139,92,246,0.3)' }}
+          >
+            Intentional
+          </span>
         </motion.h1>
         <motion.p
           initial={{ opacity: 0 }}

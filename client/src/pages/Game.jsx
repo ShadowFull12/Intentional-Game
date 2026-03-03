@@ -286,10 +286,10 @@ export default function Game() {
                 </div>
 
                 <h3 className="text-lg font-display font-bold text-white mb-2">
-                  Generating Product
+                  Finding Product
                 </h3>
                 <p className="text-sm text-white/40">
-                  AI is crafting your next product...
+                  Searching for the perfect product...
                 </p>
 
                 {/* Animated dots */}

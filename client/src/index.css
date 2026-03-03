@@ -63,6 +63,82 @@ body {
 }
 
 /* ─── Scrollbar ───────────────────────────────────── */
+/* ─── Flashlight Sweep Animation ─────────────────── */
+.flashlight-sweep {
+  -webkit-mask-image: radial-gradient(circle 60px, white 30%, transparent 100%);
+  mask-image: radial-gradient(circle 60px, white 30%, transparent 100%);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 120px 200%;
+  mask-size: 120px 200%;
+  animation: flashlightMove 6s ease-in-out infinite;
+}
+
+@keyframes flashlightMove {
+  0% {
+    -webkit-mask-position: -15% 50%;
+    mask-position: -15% 50%;
+  }
+  8% {
+    -webkit-mask-position: -10% 48%;
+    mask-position: -10% 48%;
+  }
+  16% {
+    -webkit-mask-position: 5% 53%;
+    mask-position: 5% 53%;
+  }
+  24% {
+    -webkit-mask-position: 20% 49%;
+    mask-position: 20% 49%;
+  }
+  32% {
+    -webkit-mask-position: 38% 52%;
+    mask-position: 38% 52%;
+  }
+  40% {
+    -webkit-mask-position: 55% 48%;
+    mask-position: 55% 48%;
+  }
+  48% {
+    -webkit-mask-position: 72% 51%;
+    mask-position: 72% 51%;
+  }
+  56% {
+    -webkit-mask-position: 90% 49%;
+    mask-position: 90% 49%;
+  }
+  62% {
+    -webkit-mask-position: 105% 50%;
+    mask-position: 105% 50%;
+  }
+  /* Slow drift back */
+  68% {
+    -webkit-mask-position: 95% 51%;
+    mask-position: 95% 51%;
+  }
+  74% {
+    -webkit-mask-position: 70% 48%;
+    mask-position: 70% 48%;
+  }
+  80% {
+    -webkit-mask-position: 40% 52%;
+    mask-position: 40% 52%;
+  }
+  86% {
+    -webkit-mask-position: 10% 49%;
+    mask-position: 10% 49%;
+  }
+  92% {
+    -webkit-mask-position: -10% 50%;
+    mask-position: -10% 50%;
+  }
+  /* Pause before repeating */
+  100% {
+    -webkit-mask-position: -15% 50%;
+    mask-position: -15% 50%;
+  }
+}
+
 ::-webkit-scrollbar {
   width: 6px;
 }
