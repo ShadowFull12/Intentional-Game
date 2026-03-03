@@ -1,12 +1,12 @@
 /**
- * Intentional - Socket Hook
- * Convenience hook for socket access
+ * Intentional - Auth Hook
+ * Convenience hook for auth/connection state
  */
 
 import { useGameStore } from '../context/GameContext';
 
 export function useSocket() {
-  const socket = useGameStore((s) => s.socket);
   const connected = useGameStore((s) => s.connected);
-  return { socket, connected };
+  const playerId = useGameStore((s) => s.playerId);
+  return { socket: null, connected, playerId };
 }

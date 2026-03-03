@@ -1,0 +1,50 @@
+{
+  "rules": {
+    "rooms": {
+      "$roomId": {
+        "info": {
+          ".read": true,
+          ".write": "auth != null && (!data.exists() || data.child('hostId').val() === auth.uid)"
+        },
+        "players": {
+          ".read": true,
+          "$uid": {
+            ".write": "auth.uid === $uid || auth.uid === root.child('rooms').child($roomId).child('info').child('hostId').val()"
+          }
+        },
+        "secret": {
+          "$uid": {
+            ".read": "auth.uid === $uid",
+            ".write": "auth.uid === root.child('rooms').child($roomId).child('info').child('hostId').val()"
+          }
+        },
+        "submissions": {
+          ".read": "auth.uid === root.child('rooms').child($roomId).child('info').child('hostId').val()",
+          "$uid": {
+            ".read": "auth.uid === $uid",
+            ".write": "auth.uid === $uid"
+          }
+        },
+        "reviews": {
+          ".read": true,
+          ".write": "auth.uid === root.child('rooms').child($roomId).child('info').child('hostId').val()"
+        },
+        "votes": {
+          ".read": true,
+          "$uid": {
+            ".write": "auth.uid === $uid && !data.exists()",
+            ".validate": "newData.isString() && newData.val() !== auth.uid"
+          }
+        },
+        "results": {
+          ".read": true,
+          ".write": "auth.uid === root.child('rooms').child($roomId).child('info').child('hostId').val()"
+        },
+        "hostData": {
+          ".read": "auth.uid === root.child('rooms').child($roomId).child('info').child('hostId').val()",
+          ".write": "auth.uid === root.child('rooms').child($roomId).child('info').child('hostId').val()"
+        }
+      }
+    }
+  }
+}

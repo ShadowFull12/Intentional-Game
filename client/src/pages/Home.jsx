@@ -84,7 +84,7 @@ export default function Home() {
       >
         <div className={`w-2 h-2 rounded-full ${connected ? 'bg-neon-green animate-pulse' : 'bg-red-500'}`} />
         <span className="text-xs text-white/30">
-          {connected ? 'Connected to server' : 'Connecting...'}
+          {connected ? 'Ready' : 'Connecting...'}
         </span>
       </motion.div>
 
