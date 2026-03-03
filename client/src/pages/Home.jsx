@@ -56,16 +56,8 @@ export default function Home() {
         transition={{ duration: 0.8, ease: 'easeOut' }}
         className="text-center mb-12"
       >
-        {/* ── Title Block with full-screen flashlight ───── */}
+        {/* ── Title Block ───── */}
         <div className="relative select-none">
-          {/* Full-screen flashlight overlay — covers entire page */}
-          <div
-            className="detective-flashlight pointer-events-none fixed inset-0 z-30"
-            style={{
-              background: 'radial-gradient(circle 120px, rgba(255,255,255,0.08) 0%, transparent 100%)',
-            }}
-          />
-
           {/* Main title: "Intentional" */}
           <motion.div
             className="relative z-10"
@@ -94,28 +86,6 @@ export default function Home() {
             </h2>
           </motion.div>
 
-          {/* Flashlight text overlay — white text revealed by spotlight mask */}
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 z-20 pointer-events-none detective-flashlight-text"
-          >
-            <h1
-              className="text-6xl md:text-8xl font-display font-bold tracking-tight leading-none"
-              style={{ letterSpacing: '0.04em' }}
-            >
-              <span className="text-white" style={{ textShadow: '0 0 30px rgba(255,255,255,0.7), 0 0 60px rgba(139,92,246,0.4)' }}>
-                Intentional
-              </span>
-            </h1>
-            <h2
-              className="font-serif italic font-semibold text-2xl md:text-4xl mt-2 md:mt-3 tracking-wide"
-              style={{ letterSpacing: '0.15em' }}
-            >
-              <span className="text-white" style={{ textShadow: '0 0 25px rgba(255,255,255,0.8), 0 0 50px rgba(139,92,246,0.5)' }}>
-                Reviews
-              </span>
-            </h2>
-          </div>
         </div>
 
         <motion.p
@@ -278,6 +248,9 @@ export default function Home() {
           3–10 players · Write fake reviews · Spot the hidden word
         </p>
       </motion.div>
+
+      {/* Full-page detective flashlight — dark overlay with moving spotlight hole */}
+      <div className="detective-flashlight pointer-events-none fixed inset-0 z-50" />
     </div>
   );
 }
