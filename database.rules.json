@@ -13,13 +13,14 @@
           }
         },
         "secret": {
+          ".write": "auth.uid === root.child('rooms').child($roomId).child('info').child('hostId').val()",
           "$uid": {
-            ".read": "auth.uid === $uid",
-            ".write": "auth.uid === root.child('rooms').child($roomId).child('info').child('hostId').val()"
+            ".read": "auth.uid === $uid"
           }
         },
         "submissions": {
           ".read": "auth.uid === root.child('rooms').child($roomId).child('info').child('hostId').val()",
+          ".write": "auth.uid === root.child('rooms').child($roomId).child('info').child('hostId').val()",
           "$uid": {
             ".read": "auth.uid === $uid",
             ".write": "auth.uid === $uid"
@@ -31,8 +32,9 @@
         },
         "votes": {
           ".read": true,
+          ".write": "auth.uid === root.child('rooms').child($roomId).child('info').child('hostId').val()",
           "$uid": {
-            ".write": "auth.uid === $uid && !data.exists()",
+            ".write": "auth.uid === $uid",
             ".validate": "newData.isString() && newData.val() !== auth.uid"
           }
         },

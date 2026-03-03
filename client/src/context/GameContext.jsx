@@ -430,11 +430,12 @@ export const useGameStore = create((set, get) => ({
     const hiddenId = playerIds[Math.floor(Math.random() * playerIds.length)];
 
     const updates = {};
-    // Clear old round data (secret cleared separately to avoid ancestor conflict)
+    // Clear old round data
     updates[`rooms/${roomId}/submissions`] = null;
     updates[`rooms/${roomId}/reviews`] = null;
     updates[`rooms/${roomId}/votes`] = null;
     updates[`rooms/${roomId}/results`] = null;
+    updates[`rooms/${roomId}/secret`] = null;
     updates[`rooms/${roomId}/hostData`] = { hiddenPlayerId: hiddenId, hiddenWord: word };
 
     // Reset player states
@@ -449,12 +450,11 @@ export const useGameStore = create((set, get) => ({
     updates[`rooms/${roomId}/info/product`] = product;
     updates[`rooms/${roomId}/info/timerEnd`] = Date.now() + DURATIONS.productReveal;
 
-    // Secret for hidden player (only they can read it via security rules)
-    // Clear old secrets first, then write new ones in the main batch
-    await dbSet(ref(db, `rooms/${roomId}/secret`), null);
-    updates[`rooms/${roomId}/secret/${hiddenId}`] = { hiddenWord: word, isHidden: true };
-
     await dbUpdate(ref(db), updates);
+
+    // Write secret after clearing (separate call to avoid ancestor path conflict)
+    await dbSet(ref(db, `rooms/${roomId}/secret/${hiddenId}`), { hiddenWord: word, isHidden: true });
+
     _transitioning = false;
 
     _phaseTimer = setTimeout(() => {
