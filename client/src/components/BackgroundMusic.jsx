@@ -21,32 +21,38 @@ export default function BackgroundMusic() {
     localStorage.setItem(STORAGE_KEY, volume);
   }, [volume, muted]);
 
-  // Auto-play on first user interaction (runs once)
+  // Auto-play: try immediately, retry aggressively, and on any interaction
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     const tryPlay = () => {
       if (startedRef.current) return;
-      audio.volume = muted ? 0 : volume;
-      audio.play().then(() => {
-        startedRef.current = true;
-        cleanup();
-      }).catch(() => {});
+      audio.volume = volume;
+      const p = audio.play();
+      if (p) {
+        p.then(() => {
+          startedRef.current = true;
+          cleanup();
+          clearInterval(retryId);
+        }).catch(() => {});
+      }
     };
 
-    const events = ['click', 'keydown', 'touchstart', 'pointerdown'];
+    // Retry every 500ms — catches when the browser tab gains focus / media-engagement
+    const retryId = setInterval(tryPlay, 500);
+
+    // Also fire on any user interaction (capture phase = catches everything)
+    const events = ['click', 'keydown', 'touchstart', 'pointerdown', 'mousedown', 'scroll'];
     const cleanup = () => {
       events.forEach(e => document.removeEventListener(e, tryPlay, true));
     };
 
-    // Try immediately (works if browser already has user-gesture grant)
-    tryPlay();
+    tryPlay(); // try immediately
 
-    // Also listen for the very first user interaction
     events.forEach(e => document.addEventListener(e, tryPlay, { capture: true }));
 
-    return cleanup;
+    return () => { cleanup(); clearInterval(retryId); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

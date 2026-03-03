@@ -55,7 +55,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative z-10">
+    <div className="min-h-screen grid grid-rows-[1fr_auto_auto_auto_1fr] items-center justify-items-center px-4 relative z-10">
+      {/* Top spacer */}
+      <div />
       {/* Logo & Title */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}
@@ -140,8 +142,7 @@ export default function Home() {
         </span>
       </motion.div>
 
-      {/* Main action area — min-h prevents layout shift when form appears */}
-      <div className="min-h-[360px] flex items-start justify-center w-full">
+      {/* Main action area */}
       <AnimatePresence mode="wait">
         {!mode ? (
           // Mode selection
@@ -150,7 +151,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="flex flex-col sm:flex-row gap-4 pt-8"
+            className="flex flex-col sm:flex-row gap-4"
           >
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -266,14 +267,13 @@ export default function Home() {
           </motion.div>
         )}
       </AnimatePresence>
-      </div>
 
-      {/* Footer info */}
+      {/* Footer info + bottom spacer */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.2 }}
-        className="mt-12 text-center"
+        className="mt-12 text-center row-span-1 self-start"
       >
         <p className="text-white/20 text-xs">
           3–10 players · Write fake reviews · Spot the hidden word
